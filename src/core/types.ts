@@ -204,3 +204,110 @@ export interface MatrixRow {
   capabilities: AdapterCapability[];
   notes?: string;
 }
+
+export interface IntentRisk {
+  impact: number;
+  irreversibility: number;
+  uncertainty: number;
+  score: number;
+  level: RiskLevel;
+}
+
+export interface IntentIR {
+  id: string;
+  source: string;
+  compiledAt: string;
+  goals: string[];
+  constraints: string[];
+  nonGoals: string[];
+  assumptions: string[];
+  acceptanceCriteria: string[];
+  affectedAreas: string[];
+  riskTags: string[];
+  risk: IntentRisk;
+  evidenceRefs: string[];
+}
+
+export type DiagnosticSeverity = "info" | "warning" | "error";
+
+export interface CompileDiagnostic {
+  code: string;
+  severity: DiagnosticSeverity;
+  message: string;
+  field?: string;
+  suggestion?: string;
+  evidenceRef?: string;
+}
+
+export interface DisambiguationOption {
+  id: string;
+  label: string;
+  rationale: string;
+  recommended?: boolean;
+}
+
+export interface DisambiguationQuestion {
+  id: string;
+  prompt: string;
+  reason: string;
+  riskScore: number;
+  options: DisambiguationOption[];
+}
+
+export interface MetamorphicRule {
+  id: string;
+  description: string;
+}
+
+export interface MetamorphicCheck {
+  ruleId: string;
+  passed: boolean;
+  message: string;
+}
+
+export interface MetamorphicResult {
+  passed: boolean;
+  checks: MetamorphicCheck[];
+}
+
+export interface PromptPatch {
+  id: string;
+  createdAt: string;
+  appliesTo: string;
+  rationale: string;
+  operations: string[];
+  score: number;
+  evidenceRefs: string[];
+  rollbackRef: string;
+}
+
+export interface PromptOptimizationReport {
+  generatedAt: string;
+  considered: number;
+  accepted: number;
+  patches: PromptPatch[];
+  skipped: string[];
+}
+
+export type ConsistencyViolationCode =
+  | "missing-artifact"
+  | "unexpected-revert"
+  | "ghost-revival"
+  | "contract-drift";
+
+export interface ConsistencyViolation {
+  code: ConsistencyViolationCode;
+  severity: "low" | "medium" | "high";
+  message: string;
+  artifact?: string;
+  stepId?: string;
+}
+
+export interface ConsistencyReport {
+  ok: boolean;
+  score: number;
+  violations: ConsistencyViolation[];
+  baselinePath: string;
+  snapshotId?: string;
+  suggestion?: string;
+}

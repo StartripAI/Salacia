@@ -44,6 +44,49 @@ async function runSecretScan(cwd) {
   return runChecked("secret-scan", "node", ["scripts/secret-scan.mjs"], { cwd });
 }
 
+async function runPromptMetamorphicCheck(cwd) {
+  const compile = await runChecked(
+    "prompt-compile",
+    "node",
+    ["dist/cli/index.js", "prompt", "compile", "stabilize release gate quality baseline", "--json"],
+    { cwd }
+  );
+  if (!compile.passed) {
+    return {
+      name: "prompt-metamorphic-pass",
+      passed: false,
+      details: `Prompt compile failed: ${compile.details}`
+    };
+  }
+
+  const compilePayload = extractFirstJsonObject(compile.output ?? compile.details ?? "");
+  const intentPath = compilePayload?.intentPath;
+  if (!intentPath || typeof intentPath !== "string") {
+    return {
+      name: "prompt-metamorphic-pass",
+      passed: false,
+      details: `Prompt compile did not return intentPath: ${compile.details}`
+    };
+  }
+
+  const test = await runChecked(
+    "prompt-test",
+    "node",
+    ["dist/cli/index.js", "prompt", "test", "--input", intentPath, "--json"],
+    { cwd }
+  );
+  const testPayload = extractFirstJsonObject(test.output ?? test.details ?? "");
+  const pass = test.passed && Boolean(testPayload?.ok);
+
+  return {
+    name: "prompt-metamorphic-pass",
+    passed: pass,
+    details: pass
+      ? `Prompt metamorphic checks passed for ${intentPath}`
+      : `Prompt metamorphic checks failed: ${test.details}`
+  };
+}
+
 function parseArg(name, fallback = undefined) {
   const index = process.argv.indexOf(name);
   if (index === -1) return fallback;
@@ -100,6 +143,7 @@ async function main() {
   checks.push(await runChecked("build", "npm", ["run", "build"], { cwd }));
   checks.push(await runChecked("smoke", "npm", ["run", "smoke"], { cwd }));
   checks.push(await runSecretScan(cwd));
+  checks.push(await runPromptMetamorphicCheck(cwd));
 
   const convergence = {
     plan: null,

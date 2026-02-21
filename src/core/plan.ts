@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { Contract, Plan, PlanStep } from "./types.js";
+import type { Contract, IntentIR, Plan, PlanStep } from "./types.js";
 
 export function derivePlan(contract: Contract): Plan {
   const normalizedSteps: PlanStep[] = contract.plan.steps.map((step, index) => ({
@@ -13,6 +13,32 @@ export function derivePlan(contract: Contract): Plan {
     generatedAt: new Date().toISOString(),
     summary: contract.intent.goals.join("; "),
     steps: normalizedSteps
+  };
+}
+
+function stableStepId(index: number, criterion: string): string {
+  const slug = criterion
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 24);
+  return slug ? `${index + 1}-${slug}` : `step-${index + 1}`;
+}
+
+export function derivePlanFromIntent(contract: Contract, intent: IntentIR): Plan {
+  const criteria = intent.acceptanceCriteria.length > 0 ? intent.acceptanceCriteria : contract.intent.goals;
+  const steps: PlanStep[] = criteria.map((criterion, index) => ({
+    id: stableStepId(index, criterion),
+    riskLevel: intent.risk.level === "critical" ? "high" : intent.risk.level,
+    expectedArtifacts: contract.plan.steps[index]?.expectedArtifacts ?? [`.salacia/journal/${index + 1}.json`],
+    verification: contract.plan.steps[index]?.verification ?? contract.verification.commands
+  }));
+
+  return {
+    contractId: contract.identity.id,
+    generatedAt: new Date().toISOString(),
+    summary: intent.goals.join("; "),
+    steps: steps.length > 0 ? steps : derivePlan(contract).steps
   };
 }
 

@@ -18,11 +18,18 @@ export interface DriftResult {
 }
 
 async function changedFiles(cwd: string): Promise<string[]> {
-  const { stdout } = await execFileAsync("git", ["diff", "--name-only"], { cwd }).catch(() => ({ stdout: "" }));
-  return stdout
+  const [unstaged, staged, untracked] = await Promise.all([
+    execFileAsync("git", ["diff", "--name-only"], { cwd }).catch(() => ({ stdout: "" })),
+    execFileAsync("git", ["diff", "--cached", "--name-only"], { cwd }).catch(() => ({ stdout: "" })),
+    execFileAsync("git", ["ls-files", "--others", "--exclude-standard"], { cwd }).catch(() => ({ stdout: "" }))
+  ]);
+
+  const files = `${unstaged.stdout}\n${staged.stdout}\n${untracked.stdout}`
     .split("\n")
     .map((s) => s.trim())
     .filter(Boolean);
+
+  return Array.from(new Set(files));
 }
 
 function matchesPrefix(file: string, rules: string[]): boolean {
@@ -38,8 +45,12 @@ export async function detectDrift(contract: Contract, cwd = process.cwd()): Prom
   const protectedPathTouches = files.filter((f) => matchesPrefix(f, contract.guardrails.protectedPaths));
 
   let score = 0;
+  score += files.length * 5;
   score += outOfScopeChanges.length * 20;
   score += protectedPathTouches.length * 40;
+  if (protectedPathTouches.length > 0) {
+    score = Math.max(score, 60);
+  }
   const thresholds = { low: 20, medium: 60, high: 100 };
   let severity: DriftResult["severity"] = "none";
   if (score >= thresholds.high) {

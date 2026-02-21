@@ -1,9 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { createContractFromVibe, loadContract, validateContract } from "../core/contract.js";
+import { createContractFromIntentIR, createContractFromVibe, loadContract, validateContract } from "../core/contract.js";
 import { ensureSalaciaDirs } from "../core/paths.js";
-import { derivePlan, savePlan } from "../core/plan.js";
+import { derivePlan, derivePlanFromIntent, savePlan } from "../core/plan.js";
 import { SnapshotManager } from "../guardian/snapshot.js";
+import { compilePromptInput } from "../prompt/compile.js";
 import { McpGateway } from "./mcp.js";
 
 export interface McpServerDescription {
@@ -13,16 +14,16 @@ export interface McpServerDescription {
 }
 
 export async function buildSalaciaMcpServerDescription(): Promise<McpServerDescription> {
-  const gateway = new McpGateway({ serverName: "salacia-mcp", serverVersion: "0.1.0" });
+  const gateway = new McpGateway({ serverName: "salacia-mcp", serverVersion: "0.1.1" });
   return {
     name: "salacia-mcp",
-    version: "0.1.0",
+    version: "0.1.1",
     tools: gateway.getDefaultTools()
   };
 }
 
 export async function runSalaciaMcpServer(cwd = process.cwd()): Promise<void> {
-  const gateway = new McpGateway({ serverName: "salacia-mcp", serverVersion: "0.1.0" });
+  const gateway = new McpGateway({ serverName: "salacia-mcp", serverVersion: "0.1.1" });
 
   await gateway.startStdioServer({
     contractValidate: async ({ path: filePath }) => {
@@ -40,8 +41,11 @@ export async function runSalaciaMcpServer(cwd = process.cwd()): Promise<void> {
     },
     planGenerate: async ({ vibe }) => {
       const paths = await ensureSalaciaDirs(cwd);
-      const contract = createContractFromVibe(vibe, "mcp");
-      const plan = derivePlan(contract);
+      const compiled = await compilePromptInput(vibe, { cwd });
+      const contract = compiled.metamorphic.passed
+        ? createContractFromIntentIR(compiled.ir, "mcp")
+        : createContractFromVibe(vibe, "mcp");
+      const plan = compiled.metamorphic.passed ? derivePlanFromIntent(contract, compiled.ir) : derivePlan(contract);
       const planPath = path.join(paths.plans, `${Date.now()}-mcp.json`);
       await savePlan(plan, planPath);
       return { ok: true, planPath };

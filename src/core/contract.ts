@@ -3,7 +3,7 @@ import path from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 import yaml from "js-yaml";
 import { z } from "zod";
-import type { Contract } from "./types.js";
+import type { Contract, IntentIR, PlanStep, RiskLevel } from "./types.js";
 
 const StepSchema = z.object({
   id: z.string().min(1),
@@ -160,6 +160,88 @@ export function createContractFromVibe(vibe: string, repo = "current"): Contract
     },
     verification: {
       commands: ["npm run lint", "npm test"]
+    },
+    evidence: {
+      runLogs: [],
+      snapshotFingerprint: null,
+      verificationResults: []
+    },
+    interop: {
+      executors: ["claude-code", "codex", "opencode", "cursor", "cline", "vscode", "antigravity"],
+      protocols: ["mcp", "acp"]
+    }
+  };
+}
+
+function mapRiskToStepRisk(risk: RiskLevel): RiskLevel {
+  if (risk === "critical") return "high";
+  return risk;
+}
+
+function deriveScopeFromIntent(intent: IntentIR): Contract["scope"] {
+  const inferred = intent.affectedAreas.length > 0 ? intent.affectedAreas : ["src/**"];
+  return {
+    inScope: inferred,
+    outOfScope: ["secrets/**", "**/.env*"],
+    interfacesTouched: ["CLI", "Contracts", "Adapters"],
+    dataTouched: [".salacia/contracts", ".salacia/specs", ".salacia/plans", ".salacia/journal"]
+  };
+}
+
+function buildPlanStepsFromIntent(intent: IntentIR): PlanStep[] {
+  const fallbackVerify = ["npm run lint", "npm test"];
+  const steps = intent.acceptanceCriteria.map((criterion, index) => ({
+    id: `step-${index + 1}`,
+    riskLevel: mapRiskToStepRisk(intent.risk.level),
+    expectedArtifacts: [`.salacia/journal/step-${index + 1}.json`],
+    verification: criterion.toLowerCase().includes("test") ? ["npm test"] : fallbackVerify
+  }));
+
+  return steps.length > 0
+    ? steps
+    : [
+        {
+          id: "step-1",
+          riskLevel: mapRiskToStepRisk(intent.risk.level),
+          expectedArtifacts: [".salacia/journal/step-1.json"],
+          verification: fallbackVerify
+        }
+      ];
+}
+
+export function createContractFromIntentIR(intent: IntentIR, repo = "current"): Contract {
+  const now = new Date().toISOString();
+  const steps = buildPlanStepsFromIntent(intent);
+
+  return {
+    identity: {
+      id: intent.id,
+      version: 1,
+      repo,
+      createdAt: now,
+      createdBy: "salacia"
+    },
+    intent: {
+      goals: intent.goals,
+      constraints: intent.constraints,
+      nonGoals: intent.nonGoals,
+      assumptions: intent.assumptions
+    },
+    scope: deriveScopeFromIntent(intent),
+    plan: {
+      steps
+    },
+    guardrails: {
+      invariants: [
+        "No plaintext secrets in repository",
+        "Preserve rollback path",
+        "No unexpected feature rollback"
+      ],
+      protectedPaths: [".env", "secrets/", ".salacia/progress"],
+      approvalPolicy: intent.risk.score >= 6 ? "require-approval-on-high-risk" : "require-approval-on-critical"
+    },
+    verification: {
+      commands: Array.from(new Set(steps.flatMap((step) => step.verification))).slice(0, 5)
     },
     evidence: {
       runLogs: [],

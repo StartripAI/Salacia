@@ -1,5 +1,6 @@
 import type { ExecutorAdapter } from "../adapters/base.js";
-import type { ExecuteOptions, Plan } from "../core/types.js";
+import type { Contract, ExecuteOptions, Plan } from "../core/types.js";
+import { evaluateConsistency } from "../guardian/consistency.js";
 import { ProgressTracker } from "../guardian/progress.js";
 import { runVerificationCommands } from "../guardian/verify.js";
 
@@ -12,12 +13,20 @@ export interface IncrementalExecutionSummary {
     success: boolean;
     evidencePath?: string;
   }>;
+  consistencyReports: Array<{
+    phase: string;
+    ok: boolean;
+    score: number;
+    violations: number;
+    snapshotId?: string;
+  }>;
 }
 
 export async function runIncrementalExecution(
   adapter: ExecutorAdapter,
   plan: Plan,
-  options: ExecuteOptions
+  options: ExecuteOptions,
+  contract?: Contract
 ): Promise<IncrementalExecutionSummary> {
   const tracker = new ProgressTracker(options.cwd);
   await tracker.initializeFromPlan(plan);
@@ -26,6 +35,26 @@ export async function runIncrementalExecution(
   let failed = 0;
   const outputs: string[] = [];
   const stepVerifications: IncrementalExecutionSummary["stepVerifications"] = [];
+  const consistencyReports: IncrementalExecutionSummary["consistencyReports"] = [];
+
+  if (contract) {
+    const preReport = await evaluateConsistency(contract, plan, options.cwd, {
+      autoSnapshotOnHighRisk: true
+    });
+    consistencyReports.push({
+      phase: "pre-exec",
+      ok: preReport.ok,
+      score: preReport.score,
+      violations: preReport.violations.length,
+      ...(preReport.snapshotId ? { snapshotId: preReport.snapshotId } : {})
+    });
+
+    if (!preReport.ok) {
+      failed += 1;
+      outputs.push(preReport.suggestion ?? "Execution blocked by consistency guardian.");
+      return { completed, failed, outputs, stepVerifications, consistencyReports };
+    }
+  }
 
   for (const step of plan.steps) {
     await tracker.updateStep(step.id, "doing", false);
@@ -57,6 +86,25 @@ export async function runIncrementalExecution(
 
       completed += 1;
       await tracker.updateStep(step.id, "done", true);
+
+      if (contract) {
+        const postReport = await evaluateConsistency(contract, plan, options.cwd, {
+          autoSnapshotOnHighRisk: true
+        });
+        consistencyReports.push({
+          phase: `post-${step.id}`,
+          ok: postReport.ok,
+          score: postReport.score,
+          violations: postReport.violations.length,
+          ...(postReport.snapshotId ? { snapshotId: postReport.snapshotId } : {})
+        });
+        if (!postReport.ok) {
+          failed += 1;
+          await tracker.updateStep(step.id, "failed", false);
+          outputs.push(postReport.suggestion ?? "Execution blocked by consistency guardian.");
+          break;
+        }
+      }
     } else {
       failed += 1;
       await tracker.updateStep(step.id, "failed", false);
@@ -64,5 +112,5 @@ export async function runIncrementalExecution(
     }
   }
 
-  return { completed, failed, outputs, stepVerifications };
+  return { completed, failed, outputs, stepVerifications, consistencyReports };
 }

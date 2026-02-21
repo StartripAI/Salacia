@@ -18,13 +18,17 @@ npm i -g salacia
 salacia init
 ```
 
-## CLI (v0.1)
+## CLI (v0.1.1)
 
 ```bash
 salacia init
 salacia plan "<vibe>"
+salacia prompt compile "<input>" --json
+salacia prompt test --input <intent-ir.json> --json
+salacia prompt optimize --from-journal --json
 salacia converge --stage plan|exec --input <path> --external --json
 salacia validate --json
+salacia guard consistency --json
 salacia execute --adapter <name> --dry-run --mode auto|cli|sdk --json
 salacia snapshot --label <label> --json
 salacia rollback [snapshot-id] --json
@@ -33,7 +37,8 @@ salacia adapters list|check|matrix --json
 salacia doctor --matrix --json
 ```
 
-`execute` enforces `converge(plan)` before dispatch and `converge(exec)` after verification.
+`plan` now runs prompt compilation (`parse -> type-check -> auto-correct -> metamorphic test`) before contract generation.  
+`execute` enforces `converge(plan)` before dispatch and `converge(exec)` after verification, with consistency safety-net blocking high-risk regressions.
 
 ## Compatibility Matrix (v0.1)
 
@@ -75,6 +80,8 @@ See docs:
 - [Protocols](docs/PROTOCOLS.md)
 - [Operations](docs/OPERATIONS.md)
 - [Release](docs/RELEASE.md)
+- [Trellis Mapping](docs/TRELLIS_MAPPING.md)
+- [Clean-Room Reuse](docs/CLEAN_ROOM_REUSE.md)
 
 ## Convergence Policy
 
@@ -101,7 +108,7 @@ See [SECURITY.md](SECURITY.md) for incident response and key rotation.
 
 ## Release Policy
 
-- Stable release in scope: GitHub release tag `v0.1.0`
+- Stable release in scope: GitHub release tag `v0.1.1`
 - npm public publish is intentionally out of scope for this cycle
 - Release is blocked unless CI and release gate pass
 
