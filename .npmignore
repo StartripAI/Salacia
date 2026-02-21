@@ -1,0 +1,6 @@
+src/
+tests/
+.github/
+vitest.config.ts
+tsconfig.json
+*.log

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.salacia/
+.cursor/
+.vscode/
+.cline/
+.antigravity/
+.env
+.env.*
+*.log
+.DS_Store
