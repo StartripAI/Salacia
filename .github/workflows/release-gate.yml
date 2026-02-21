@@ -65,19 +65,17 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.external_advisors }}" = "true" ]; then
             echo "Using real advisor scripts"
           else
-            cat > scripts/validate-claude.sh <<'SCRIPT'
-            #!/usr/bin/env bash
-            set -euo pipefail
-            echo '{"vote":"approve","summary":"mock claude approve","evidenceRef":"mock-claude"}'
-            SCRIPT
+            printf '%s\n' \
+              '#!/usr/bin/env node' \
+              'console.log(JSON.stringify({ vote: \"approve\", summary: \"mock claude approve\", evidenceRef: \"mock-claude\" }));' \
+              > scripts/validate-claude.mjs
 
-            cat > scripts/validate-gemini.sh <<'SCRIPT'
-            #!/usr/bin/env bash
-            set -euo pipefail
-            echo '{"vote":"approve","summary":"mock gemini approve","evidenceRef":"mock-gemini"}'
-            SCRIPT
+            printf '%s\n' \
+              '#!/usr/bin/env node' \
+              'console.log(JSON.stringify({ vote: \"approve\", summary: \"mock gemini approve\", evidenceRef: \"mock-gemini\" }));' \
+              > scripts/validate-gemini.mjs
 
-            chmod +x scripts/validate-claude.sh scripts/validate-gemini.sh
+            chmod +x scripts/validate-claude.mjs scripts/validate-gemini.mjs
           fi
 
       - name: Install advisor CLIs (external mode)
