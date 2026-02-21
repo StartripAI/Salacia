@@ -126,7 +126,7 @@ export async function callSalaciaMcpTool(options: {
     cwd: options.cwd
   });
 
-  const client = new Client({ name: "salacia-mcp-client", version: "0.1.0" });
+  const client = new Client({ name: "salacia-mcp-client", version: "0.1.1" });
 
   try {
     await client.connect(transport);
