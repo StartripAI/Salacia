@@ -4,6 +4,7 @@
 
 - Hotfix: normalize restored snapshot line ending assertion for Windows CI.
 - Confirmed `main` cross-platform matrix green after v0.1.1 merge.
+- Changed GitHub Release Gate/Release workflows to mock-advisor-only mode (no external advisor API keys in CI).
 
 ## 0.1.1 - 2026-02-21
 

@@ -19,6 +19,7 @@
 - prompt metamorphic checks passed
 - no unresolved split
 - advisor evidence present
+- GitHub release workflows use mock advisors only and do not inject external API keys
 
 ## Commands
 
