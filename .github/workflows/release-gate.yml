@@ -67,12 +67,12 @@ jobs:
           else
             printf '%s\n' \
               '#!/usr/bin/env node' \
-              'console.log(JSON.stringify({ vote: \"approve\", summary: \"mock claude approve\", evidenceRef: \"mock-claude\" }));' \
+              'console.log(JSON.stringify({ vote: "approve", summary: "mock claude approve", evidenceRef: "mock-claude" }));' \
               > scripts/validate-claude.mjs
 
             printf '%s\n' \
               '#!/usr/bin/env node' \
-              'console.log(JSON.stringify({ vote: \"approve\", summary: \"mock gemini approve\", evidenceRef: \"mock-gemini\" }));' \
+              'console.log(JSON.stringify({ vote: "approve", summary: "mock gemini approve", evidenceRef: "mock-gemini" }));' \
               > scripts/validate-gemini.mjs
 
             chmod +x scripts/validate-claude.mjs scripts/validate-gemini.mjs
@@ -95,6 +95,7 @@ jobs:
             --require-convergence
 
       - name: Upload release gate report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: release-gate-report
