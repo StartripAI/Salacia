@@ -1,0 +1,47 @@
+{
+  "name": "salacia",
+  "version": "0.1.0",
+  "description": "Salacia - repo-first Agentic Engineering OS",
+  "type": "module",
+  "license": "Apache-2.0",
+  "bin": {
+    "salacia": "dist/cli/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/cli/index.ts src/index.ts --format esm --dts --sourcemap --clean",
+    "typecheck": "tsc --noEmit",
+    "lint": "npm run typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "node dist/cli/index.js --help && node dist/cli/index.js doctor --matrix",
+    "secret:scan": "node scripts/secret-scan.mjs",
+    "release:gate": "node scripts/release-gate.mjs",
+    "release:gate:strict": "node scripts/release-gate.mjs --require-convergence",
+    "prepublishOnly": "npm run lint && npm run test && npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.50",
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "ajv": "^8.17.1",
+    "commander": "^14.0.3",
+    "js-yaml": "^4.1.0",
+    "yaml": "^2.8.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^24.7.2",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}

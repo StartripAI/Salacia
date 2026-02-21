@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Install advisor CLIs
+        run: npm install --global @anthropic-ai/claude-code @google/gemini-cli
+
+      - name: Prepare gate fixtures
+        shell: bash
+        run: |
+          mkdir -p .salacia/plans .salacia/journal
+          cat > .salacia/plans/release-gate-plan.json <<'JSON'
+          {
+            "contractId": "release-gate",
+            "generatedAt": "2026-02-21T00:00:00.000Z",
+            "summary": "release gate fixture with steps",
+            "steps": [
+              {
+                "id": "fixture-step",
+                "riskLevel": "low",
+                "expectedArtifacts": [".salacia/journal/release-gate-exec.json"],
+                "verification": ["node -e \"process.exit(0)\""]
+              }
+            ]
+          }
+          JSON
+
+          cat > .salacia/journal/release-gate-exec.json <<'JSON'
+          {
+            "success": true,
+            "verification": {
+              "success": true
+            }
+          }
+          JSON
+
+      - name: Run release gate (external advisors required)
+        shell: bash
+        env:
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          node scripts/release-gate.mjs \
+            --plan .salacia/plans/release-gate-plan.json \
+            --exec .salacia/journal/release-gate-exec.json \
+            --require-convergence
+
+      - name: Package
+        run: npm pack
+
+      - name: Generate release notes
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          cat > RELEASE_NOTES.md <<NOTES
+          # ${TAG}
+
+          See [CHANGELOG.md](CHANGELOG.md) for full details.
+
+          ## Compatibility
+          - Platforms: macOS, Linux, Windows (Codex via WSL on Windows)
+          - Adapters: Claude, Codex, OpenCode, Cursor, Cline, VS Code, Antigravity
+
+          ## Boundaries
+          - Codex App informational-only (macOS Apple Silicon)
+          - Antigravity delivered in bridge capability mode in v0.1
+          NOTES
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: RELEASE_NOTES.md
+          files: |
+            salacia-*.tgz
