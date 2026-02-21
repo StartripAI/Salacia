@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2 - 2026-02-21
+
+- Hotfix: normalize restored snapshot line ending assertion for Windows CI.
+- Confirmed `main` cross-platform matrix green after v0.1.1 merge.
+
 ## 0.1.1 - 2026-02-21
 
 - Added Prompt Compiler pipeline (`IntentIR`, diagnostics, auto-correct) and wired it into `salacia plan`.

@@ -14,16 +14,16 @@ export interface McpServerDescription {
 }
 
 export async function buildSalaciaMcpServerDescription(): Promise<McpServerDescription> {
-  const gateway = new McpGateway({ serverName: "salacia-mcp", serverVersion: "0.1.1" });
+  const gateway = new McpGateway({ serverName: "salacia-mcp", serverVersion: "0.1.2" });
   return {
     name: "salacia-mcp",
-    version: "0.1.1",
+    version: "0.1.2",
     tools: gateway.getDefaultTools()
   };
 }
 
 export async function runSalaciaMcpServer(cwd = process.cwd()): Promise<void> {
-  const gateway = new McpGateway({ serverName: "salacia-mcp", serverVersion: "0.1.1" });
+  const gateway = new McpGateway({ serverName: "salacia-mcp", serverVersion: "0.1.2" });
 
   await gateway.startStdioServer({
     contractValidate: async ({ path: filePath }) => {
