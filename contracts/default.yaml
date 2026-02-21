@@ -1,0 +1,59 @@
+identity:
+  id: salacia-contract-default
+  version: 1
+  repo: current
+  createdAt: 1970-01-01T00:00:00.000Z
+  createdBy: salacia
+intent:
+  goals:
+    - Deliver production-grade outcome from vibe input
+  constraints:
+    - Keep changes auditable and reversible
+  nonGoals:
+    - Introduce unrelated refactors
+  assumptions:
+    - Node.js >=20 available
+scope:
+  inScope:
+    - src/**
+  outOfScope:
+    - secrets/**
+  interfacesTouched:
+    - CLI
+  dataTouched:
+    - .salacia/**
+plan:
+  steps:
+    - id: analyze
+      riskLevel: low
+      expectedArtifacts:
+        - .salacia/plans/latest.json
+      verification:
+        - npm run lint
+guardrails:
+  invariants:
+    - no plaintext secrets in repository
+  protectedPaths:
+    - .env
+    - secrets/
+  approvalPolicy: require-approval-on-high-risk
+verification:
+  commands:
+    - npm run lint
+    - npm test
+evidence:
+  runLogs: []
+  snapshotFingerprint: null
+  verificationResults: []
+interop:
+  executors:
+    - claude-code
+    - codex
+    - opencode
+    - cursor
+    - cline
+    - vscode
+    - antigravity
+  protocols:
+    - mcp
+    - acp
