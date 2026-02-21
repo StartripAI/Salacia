@@ -35,11 +35,17 @@ salacia prompt optimize --from-journal --json
 node scripts/release-gate.mjs --plan <plan.json> --exec <exec.json> --require-convergence
 ```
 
-Optional local-only mode without external advisors:
+Local-only mode without external advisors:
 
 ```bash
 node scripts/release-gate.mjs --plan <plan.json> --exec <exec.json> --require-convergence --no-external
 ```
+
+GitHub Actions policy:
+
+- Release Gate and Release workflows run mock advisor scripts only.
+- No external advisor API keys are injected in GitHub workflows.
+- External advisor validation remains a local/operator action, outside GitHub CI environment.
 
 Consistency safety net check:
 

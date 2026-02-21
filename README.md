@@ -96,6 +96,7 @@ Rules:
 - 2/3 majority required (`approve` or `reject`)
 - split/abstain outcome requires human approval
 - release gate fails on missing advisor evidence, malformed advisor output, or unresolved split
+- GitHub workflows use deterministic mock advisor scripts only (no external advisor API calls)
 
 ## Security Model
 
@@ -103,6 +104,7 @@ Rules:
 - Claude calls only set `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` at invocation time
 - Secret scan is part of CI and release gate
 - Protected paths can be blocked through contract guardrails
+- GitHub workflows do not inject external advisor API keys for convergence checks
 
 See [SECURITY.md](SECURITY.md) for incident response and key rotation.
 

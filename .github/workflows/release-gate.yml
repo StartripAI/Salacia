@@ -3,12 +3,6 @@ name: Release Gate
 on:
   pull_request:
   workflow_dispatch:
-    inputs:
-      external_advisors:
-        description: "Run Claude/Gemini external advisors"
-        required: false
-        type: boolean
-        default: false
 
 jobs:
   release-gate:
@@ -59,35 +53,23 @@ jobs:
           }
           JSON
 
-      - name: Prepare advisors (mock by default)
+      - name: Prepare advisors (mock-only)
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.external_advisors }}" = "true" ]; then
-            echo "Using real advisor scripts"
-          else
-            printf '%s\n' \
-              '#!/usr/bin/env node' \
-              'console.log(JSON.stringify({ vote: "approve", summary: "mock claude approve", evidenceRef: "mock-claude" }));' \
-              > scripts/validate-claude.mjs
+          printf '%s\n' \
+            '#!/usr/bin/env node' \
+            'console.log(JSON.stringify({ vote: "approve", summary: "mock claude approve", evidenceRef: "mock-claude" }));' \
+            > scripts/validate-claude.mjs
 
-            printf '%s\n' \
-              '#!/usr/bin/env node' \
-              'console.log(JSON.stringify({ vote: "approve", summary: "mock gemini approve", evidenceRef: "mock-gemini" }));' \
-              > scripts/validate-gemini.mjs
+          printf '%s\n' \
+            '#!/usr/bin/env node' \
+            'console.log(JSON.stringify({ vote: "approve", summary: "mock gemini approve", evidenceRef: "mock-gemini" }));' \
+            > scripts/validate-gemini.mjs
 
-            chmod +x scripts/validate-claude.mjs scripts/validate-gemini.mjs
-          fi
+          chmod +x scripts/validate-claude.mjs scripts/validate-gemini.mjs
 
-      - name: Install advisor CLIs (external mode)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.external_advisors == true }}
-        run: npm install --global @anthropic-ai/claude-code @google/gemini-cli
-
-      - name: Run release gate
+      - name: Run release gate (mock advisors, no external API keys)
         shell: bash
-        env:
-          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
-          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           node scripts/release-gate.mjs \
             --plan .salacia/plans/release-gate-plan.json \
