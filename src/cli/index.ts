@@ -31,7 +31,7 @@ import { optimizePrompts } from "../prompt/optimize.js";
 import { buildSalaciaMcpServerDescription, runSalaciaMcpServer } from "../protocols/mcp-server.js";
 
 const program = new Command();
-program.name("salacia").description("Salacia v0.1.1 - repo-first Agentic Engineering OS").version("0.1.1");
+program.name("salacia").description("Salacia v0.1.2 - repo-first Agentic Engineering OS").version("0.1.2");
 
 function emit(data: unknown, asJson: boolean): void {
   if (asJson) {

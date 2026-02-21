@@ -18,7 +18,7 @@ npm i -g salacia
 salacia init
 ```
 
-## CLI (v0.1.1)
+## CLI (v0.1.2)
 
 ```bash
 salacia init
@@ -108,7 +108,7 @@ See [SECURITY.md](SECURITY.md) for incident response and key rotation.
 
 ## Release Policy
 
-- Stable release in scope: GitHub release tag `v0.1.1`
+- Stable release in scope: GitHub release tag `v0.1.2`
 - npm public publish is intentionally out of scope for this cycle
 - Release is blocked unless CI and release gate pass
 
