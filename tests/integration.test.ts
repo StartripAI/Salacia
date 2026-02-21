@@ -11,10 +11,12 @@ import { runHarnessInitializer } from "../src/harness/initializer.js";
 import { runIncrementalExecution } from "../src/harness/incremental.js";
 import { runVerification } from "../src/guardian/verify.js";
 
-async function writeMockAdvisor(scriptPath: string): Promise<void> {
-  await fs.mkdir(path.dirname(scriptPath), { recursive: true });
+async function writeMockAdvisor(scriptDir: string, advisor: "claude" | "gemini"): Promise<void> {
+  await fs.mkdir(scriptDir, { recursive: true });
+
+  const unixPath = path.join(scriptDir, `validate-${advisor}.sh`);
   await fs.writeFile(
-    scriptPath,
+    unixPath,
     [
       "#!/usr/bin/env bash",
       "set -euo pipefail",
@@ -22,7 +24,16 @@ async function writeMockAdvisor(scriptPath: string): Promise<void> {
     ].join("\n"),
     "utf8"
   );
-  await fs.chmod(scriptPath, 0o755);
+  await fs.chmod(unixPath, 0o755);
+
+  const windowsPath = path.join(scriptDir, `validate-${advisor}.cmd`);
+  await fs.writeFile(
+    windowsPath,
+    ['@echo off', 'setlocal', 'echo {"vote":"approve","summary":"mock approve","evidenceRef":"mock-evidence"}'].join(
+      "\r\n"
+    ),
+    "utf8"
+  );
 }
 
 describe("end-to-end flow", () => {
@@ -30,8 +41,9 @@ describe("end-to-end flow", () => {
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "salacia-e2e-"));
     const paths = await ensureSalaciaDirs(root);
 
-    await writeMockAdvisor(path.join(root, "scripts", "validate-claude.sh"));
-    await writeMockAdvisor(path.join(root, "scripts", "validate-gemini.sh"));
+    const scriptDir = path.join(root, "scripts");
+    await writeMockAdvisor(scriptDir, "claude");
+    await writeMockAdvisor(scriptDir, "gemini");
 
     const contract = createContractFromVibe("build a todo app", "e2e-repo");
     contract.plan.steps = contract.plan.steps.map((step) => ({

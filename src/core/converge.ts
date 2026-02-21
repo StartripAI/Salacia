@@ -165,6 +165,11 @@ async function runExternalAdvisor(
   };
 }
 
+function advisorScript(advisor: "claude" | "gemini"): string {
+  const ext = process.platform === "win32" ? "cmd" : "sh";
+  return `validate-${advisor}.${ext}`;
+}
+
 export function resolveConvergence(stage: Stage, opinions: AdvisorOpinion[]): ConvergenceDecision {
   const votes = { approve: 0, reject: 0, abstain: 0 };
   const evidenceRefs: string[] = [];
@@ -213,10 +218,10 @@ export async function runConvergence(options: ConvergeOptions): Promise<Converge
 
   if (options.external) {
     opinions.push(
-      await runExternalAdvisor("claude", "validate-claude.sh", options.inputPath, cwd, timeoutMs, retries)
+      await runExternalAdvisor("claude", advisorScript("claude"), options.inputPath, cwd, timeoutMs, retries)
     );
     opinions.push(
-      await runExternalAdvisor("gemini", "validate-gemini.sh", options.inputPath, cwd, timeoutMs, retries)
+      await runExternalAdvisor("gemini", advisorScript("gemini"), options.inputPath, cwd, timeoutMs, retries)
     );
   } else {
     opinions.push({
