@@ -14,26 +14,16 @@ import { runVerification } from "../src/guardian/verify.js";
 async function writeMockAdvisor(scriptDir: string, advisor: "claude" | "gemini"): Promise<void> {
   await fs.mkdir(scriptDir, { recursive: true });
 
-  const unixPath = path.join(scriptDir, `validate-${advisor}.sh`);
+  const scriptPath = path.join(scriptDir, `validate-${advisor}.mjs`);
   await fs.writeFile(
-    unixPath,
+    scriptPath,
     [
-      "#!/usr/bin/env bash",
-      "set -euo pipefail",
-      "echo '{\"vote\":\"approve\",\"summary\":\"mock approve\",\"evidenceRef\":\"mock-evidence\"}'"
+      "#!/usr/bin/env node",
+      "console.log(JSON.stringify({ vote: 'approve', summary: 'mock approve', evidenceRef: 'mock-evidence' }));"
     ].join("\n"),
     "utf8"
   );
-  await fs.chmod(unixPath, 0o755);
-
-  const windowsPath = path.join(scriptDir, `validate-${advisor}.cmd`);
-  await fs.writeFile(
-    windowsPath,
-    ['@echo off', 'setlocal', 'echo {"vote":"approve","summary":"mock approve","evidenceRef":"mock-evidence"}'].join(
-      "\r\n"
-    ),
-    "utf8"
-  );
+  await fs.chmod(scriptPath, 0o755);
 }
 
 describe("end-to-end flow", () => {

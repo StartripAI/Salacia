@@ -126,7 +126,7 @@ async function runExternalAdvisor(
   for (let attempt = 1; attempt <= retries + 1; attempt++) {
     try {
       await fs.access(scriptPath);
-      const { stdout, stderr } = await execFileAsync(scriptPath, [inputPath], {
+      const { stdout, stderr } = await execFileAsync("node", [scriptPath, inputPath], {
         cwd,
         timeout: timeoutMs,
         maxBuffer: 5 * 1024 * 1024
@@ -163,11 +163,6 @@ async function runExternalAdvisor(
     parseStatus: "invalid",
     evidenceRef: scriptPath
   };
-}
-
-function advisorScript(advisor: "claude" | "gemini"): string {
-  const ext = process.platform === "win32" ? "cmd" : "sh";
-  return `validate-${advisor}.${ext}`;
 }
 
 export function resolveConvergence(stage: Stage, opinions: AdvisorOpinion[]): ConvergenceDecision {
@@ -218,10 +213,10 @@ export async function runConvergence(options: ConvergeOptions): Promise<Converge
 
   if (options.external) {
     opinions.push(
-      await runExternalAdvisor("claude", advisorScript("claude"), options.inputPath, cwd, timeoutMs, retries)
+      await runExternalAdvisor("claude", "validate-claude.mjs", options.inputPath, cwd, timeoutMs, retries)
     );
     opinions.push(
-      await runExternalAdvisor("gemini", advisorScript("gemini"), options.inputPath, cwd, timeoutMs, retries)
+      await runExternalAdvisor("gemini", "validate-gemini.mjs", options.inputPath, cwd, timeoutMs, retries)
     );
   } else {
     opinions.push({
