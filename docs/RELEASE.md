@@ -17,6 +17,7 @@
 - convergence plan stage approved (2/3)
 - convergence exec stage approved (2/3)
 - prompt metamorphic checks passed
+- superiority audit stronger-than-baseline passed
 - no unresolved split
 - advisor evidence present
 - GitHub release workflows use mock advisors only and do not inject external API keys

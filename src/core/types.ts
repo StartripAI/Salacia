@@ -311,3 +311,69 @@ export interface ConsistencyReport {
   snapshotId?: string;
   suggestion?: string;
 }
+
+export type SuperiorityProbeId =
+  | "prompt_compiler_pipeline"
+  | "active_disambiguation"
+  | "metamorphic_guard"
+  | "prompt_optimizer_auditability"
+  | "consistency_safety_net"
+  | "dual_convergence_gates"
+  | "trellis_mapping_doc"
+  | "clean_room_policy_doc"
+  | "snapshot_restore_test_coverage"
+  | "json_cli_contract";
+
+export interface SuperiorityAuditCheckSpec {
+  id: string;
+  probe: SuperiorityProbeId;
+  weight: number;
+  required: boolean;
+  strengthSignal: boolean;
+  description?: string;
+}
+
+export interface SuperiorityAuditProfile {
+  id: string;
+  name: string;
+  version: string;
+  baselineScore: number;
+  requiredScore: number;
+  requiredMargin: number;
+  minimumStrengthSignals: number;
+  checks: SuperiorityAuditCheckSpec[];
+}
+
+export interface SuperiorityAuditCheckResult {
+  id: string;
+  probe: SuperiorityProbeId;
+  passed: boolean;
+  weight: number;
+  awarded: number;
+  required: boolean;
+  strengthSignal: boolean;
+  summary: string;
+  evidenceRefs: string[];
+  metrics?: Record<string, number | string | boolean>;
+}
+
+export interface SuperiorityAuditReport {
+  generatedAt: string;
+  profileId: string;
+  profileName: string;
+  profileVersion: string;
+  profilePath: string;
+  baselineScore: number;
+  requiredScore: number;
+  baselineTargetScore: number;
+  score: number;
+  maxScore: number;
+  passRate: number;
+  strengthSignals: number;
+  minimumStrengthSignals: number;
+  strongerThanBaseline: boolean;
+  requiredFailures: string[];
+  failedChecks: string[];
+  checks: SuperiorityAuditCheckResult[];
+  reportPath: string;
+}

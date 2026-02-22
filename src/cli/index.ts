@@ -4,6 +4,7 @@ import path from "node:path";
 import { stdin as input, stdout as output } from "node:process";
 import { createInterface } from "node:readline/promises";
 import { Command } from "commander";
+import { runSuperiorityAudit } from "../audit/superiority.js";
 import {
   createContractFromIntentIR,
   loadContract,
@@ -598,6 +599,26 @@ program
       matrix: opts.matrix ? matrix : undefined
     };
     emit(report, opts.json || true);
+  });
+
+program
+  .command("audit")
+  .description("Run audit suites for capability and evidence quality")
+  .argument("<action>", "superiority")
+  .option("--profile <path>", "audit profile path")
+  .option("--json", "json output", false)
+  .action(async (action: string, opts: { profile?: string; json: boolean }) => {
+    if (action !== "superiority") {
+      emit({ ok: false, error: "Unknown audit action. Use superiority." }, true);
+      process.exit(1);
+    }
+
+    const report = await runSuperiorityAudit({
+      cwd: process.cwd(),
+      ...(opts.profile ? { profilePath: opts.profile } : {})
+    });
+    emit({ ok: report.strongerThanBaseline, report }, opts.json || true);
+    if (!report.strongerThanBaseline) process.exit(1);
   });
 
 program

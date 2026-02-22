@@ -144,6 +144,7 @@ async function main() {
   checks.push(await runChecked("smoke", "npm", ["run", "smoke"], { cwd }));
   checks.push(await runSecretScan(cwd));
   checks.push(await runPromptMetamorphicCheck(cwd));
+  checks.push(await runChecked("superiority-audit", "node", ["dist/cli/index.js", "audit", "superiority", "--json"], { cwd }));
 
   const convergence = {
     plan: null,

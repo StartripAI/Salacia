@@ -53,6 +53,14 @@ Consistency safety net check:
 salacia guard consistency --json
 ```
 
+Superiority audit (trust-through-evidence):
+
+```bash
+salacia audit superiority --profile docs/benchmarks/trellis-baseline.v1.json --json
+```
+
+Audit evidence is persisted to `.salacia/journal/superiority-audit-*.json`.
+
 ## Snapshot and Rollback
 
 Create snapshot:

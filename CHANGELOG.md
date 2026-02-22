@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 - 2026-02-21
+
+- Added auditable superiority engine (`salacia audit superiority`) with weighted baseline profile and per-check evidence refs.
+- Added baseline profile `docs/benchmarks/trellis-baseline.v1.json` for reproducible strength scoring.
+- Added release gate enforcement for superiority audit (`superiority-audit` check).
+- Added superiority audit unit tests and documentation updates for trust-through-evidence workflow.
+
 ## 0.1.2 - 2026-02-21
 
 - Hotfix: normalize restored snapshot line ending assertion for Windows CI.

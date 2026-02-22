@@ -35,6 +35,7 @@ salacia rollback [snapshot-id] --json
 salacia status --json
 salacia adapters list|check|matrix --json
 salacia doctor --matrix --json
+salacia audit superiority --profile docs/benchmarks/trellis-baseline.v1.json --json
 ```
 
 `plan` now runs prompt compilation (`parse -> type-check -> auto-correct -> metamorphic test`) before contract generation.  
@@ -82,6 +83,26 @@ See docs:
 - [Release](docs/RELEASE.md)
 - [Trellis Mapping](docs/TRELLIS_MAPPING.md)
 - [Clean-Room Reuse](docs/CLEAN_ROOM_REUSE.md)
+
+## Auditable Superiority
+
+Salacia does not ask for trust by claim. It ships a reproducible audit that scores capability strength against a locked baseline profile.
+
+Run:
+
+```bash
+salacia audit superiority --profile docs/benchmarks/trellis-baseline.v1.json --json
+```
+
+The report includes:
+- weighted check results,
+- required-failure list,
+- strength-signal count,
+- baseline comparison target,
+- evidence references for each check,
+- persisted report path in `.salacia/journal/superiority-audit-*.json`.
+
+If `strongerThanBaseline=false`, release gate fails.
 
 ## Convergence Policy
 

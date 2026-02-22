@@ -1,0 +1,91 @@
+{
+  "id": "trellis-baseline-v1",
+  "name": "Trellis-like Public Capability Baseline",
+  "version": "1.0.0",
+  "baselineScore": 70,
+  "requiredScore": 85,
+  "requiredMargin": 10,
+  "minimumStrengthSignals": 6,
+  "checks": [
+    {
+      "id": "prompt.compiler.pipeline",
+      "probe": "prompt_compiler_pipeline",
+      "weight": 14,
+      "required": true,
+      "strengthSignal": true,
+      "description": "Prompt pipeline compiles intent with guardrails and metamorphic checks."
+    },
+    {
+      "id": "prompt.active.disambiguation",
+      "probe": "active_disambiguation",
+      "weight": 10,
+      "required": true,
+      "strengthSignal": true,
+      "description": "High-risk ambiguity triggers exactly one high-value clarification path."
+    },
+    {
+      "id": "prompt.metamorphic.guard",
+      "probe": "metamorphic_guard",
+      "weight": 10,
+      "required": true,
+      "strengthSignal": true,
+      "description": "Rewrite drift is detected when non-goals/constraints are weakened."
+    },
+    {
+      "id": "prompt.optimizer.auditability",
+      "probe": "prompt_optimizer_auditability",
+      "weight": 10,
+      "required": true,
+      "strengthSignal": true,
+      "description": "Prompt optimizer emits auditable patch + rollback artifacts."
+    },
+    {
+      "id": "guardian.consistency.safety-net",
+      "probe": "consistency_safety_net",
+      "weight": 18,
+      "required": true,
+      "strengthSignal": true,
+      "description": "Feature regression is blocked with evidence and rollback snapshot."
+    },
+    {
+      "id": "kernel.dual.convergence.gates",
+      "probe": "dual_convergence_gates",
+      "weight": 10,
+      "required": true,
+      "strengthSignal": true,
+      "description": "Plan and exec convergence gates are both enforced."
+    },
+    {
+      "id": "docs.trellis.mapping",
+      "probe": "trellis_mapping_doc",
+      "weight": 8,
+      "required": true,
+      "strengthSignal": false,
+      "description": "Trellis capability mapping is documented with evidence paths."
+    },
+    {
+      "id": "docs.clean-room.policy",
+      "probe": "clean_room_policy_doc",
+      "weight": 8,
+      "required": true,
+      "strengthSignal": false,
+      "description": "Clean-room policy is explicit and enforceable."
+    },
+    {
+      "id": "tests.snapshot.restore.coverage",
+      "probe": "snapshot_restore_test_coverage",
+      "weight": 6,
+      "required": true,
+      "strengthSignal": false,
+      "description": "Snapshot restore and checksum mismatch paths are tested."
+    },
+    {
+      "id": "cli.json.contract",
+      "probe": "json_cli_contract",
+      "weight": 6,
+      "required": false,
+      "strengthSignal": false,
+      "description": "Operational commands expose deterministic JSON mode."
+    }
+  ]
+}

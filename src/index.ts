@@ -18,3 +18,4 @@ export * from "./prompt/disambiguate.js";
 export * from "./prompt/metamorphic.js";
 export * from "./prompt/compile.js";
 export * from "./prompt/optimize.js";
+export * from "./audit/superiority.js";

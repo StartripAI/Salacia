@@ -20,6 +20,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke": "node dist/cli/index.js --help && node dist/cli/index.js doctor --matrix",
+    "audit:superiority": "node dist/cli/index.js audit superiority --json",
     "secret:scan": "node scripts/secret-scan.mjs",
     "release:gate": "node scripts/release-gate.mjs",
     "release:gate:strict": "node scripts/release-gate.mjs --require-convergence",
