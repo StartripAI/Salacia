@@ -1,39 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Salacia — The Runtime for AI Coding Agents</title>
-    <meta name="description" content="Stop wasting tokens on bad prompts. Salacia makes any AI coding agent smarter, faster, and cheaper. 93% fault localization accuracy, +6% more bugs solved.">
+    <meta name="description"
+        content="Stop wasting tokens on bad prompts. Salacia makes any AI coding agent smarter, faster, and cheaper.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0f;
-            --bg-card: #12121a;
-            --bg-code: #1a1a2e;
-            --text: #e4e4ef;
-            --text-dim: #8888a0;
-            --accent: #6366f1;
-            --accent-glow: rgba(99, 102, 241, 0.15);
-            --green: #22c55e;
-            --green-dim: rgba(34, 197, 94, 0.12);
-            --orange: #f59e0b;
+            --white: #ffffff;
+            --bg: #fafbfe;
+            --bg-glass: rgba(255, 255, 255, 0.65);
+            --bg-glass-strong: rgba(255, 255, 255, 0.85);
+            --text: #1a1a2e;
+            --text-secondary: #6b7094;
+            --text-tertiary: #9ca3be;
+            --purple: #8b5cf6;
+            --purple-light: #a78bfa;
+            --purple-soft: rgba(139, 92, 246, 0.08);
             --pink: #ec4899;
-            --border: #1e1e2e;
-            --radius: 12px;
+            --pink-soft: rgba(236, 72, 153, 0.08);
+            --green: #10b981;
+            --green-soft: rgba(16, 185, 129, 0.08);
+            --mint: #34d399;
+            --border: rgba(139, 92, 246, 0.12);
+            --border-glass: rgba(255, 255, 255, 0.5);
+            --shadow-soft: 0 2px 40px rgba(139, 92, 246, 0.06);
+            --shadow-glass: 0 8px 32px rgba(139, 92, 246, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            --radius: 20px;
+            --radius-sm: 14px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
             color: var(--text);
-            line-height: 1.6;
+            line-height: 1.65;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
-        .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
 
-        /* Hero */
+        /* ── Diffusion background ── */
+        .diffusion-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .diffusion-bg .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .diffusion-bg .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent);
+            top: -150px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .diffusion-bg .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.2), transparent);
+            top: 200px;
+            right: -200px;
+            animation-delay: -7s;
+        }
+
+        .diffusion-bg .orb-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(52, 211, 153, 0.2), transparent);
+            bottom: 200px;
+            left: 30%;
+            animation-delay: -14s;
+        }
+
+        .diffusion-bg .orb-4 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(167, 139, 250, 0.2), transparent);
+            bottom: -100px;
+            right: 20%;
+            animation-delay: -3s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(30px, -40px) scale(1.05);
+            }
+
+            50% {
+                transform: translate(-20px, 20px) scale(0.95);
+            }
+
+            75% {
+                transform: translate(15px, 30px) scale(1.02);
+            }
+        }
+
+        .container {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ── Glass card ── */
+        .glass {
+            background: var(--bg-glass);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-glass);
+        }
+
+        /* ── Nav ── */
+        nav {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            padding: 10px 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            border-radius: 100px;
+        }
+
+        nav .logo {
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--text);
+        }
+
+        /* ── Hero ── */
         .hero {
             min-height: 100vh;
             display: flex;
@@ -41,399 +190,551 @@
             justify-content: center;
             align-items: center;
             text-align: center;
+            padding: 120px 24px 80px;
             position: relative;
-            padding: 80px 24px;
         }
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -200px;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-        }
+
         .badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             padding: 6px 16px;
-            background: var(--accent-glow);
-            border: 1px solid rgba(99, 102, 241, 0.3);
             border-radius: 100px;
             font-size: 13px;
-            font-weight: 500;
-            color: var(--accent);
-            margin-bottom: 32px;
-            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: var(--purple);
+            margin-bottom: 40px;
+            background: var(--purple-soft);
+            border: 1px solid rgba(139, 92, 246, 0.15);
         }
+
         .hero h1 {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-size: clamp(2.8rem, 7vw, 5rem);
             font-weight: 900;
-            line-height: 1.1;
+            line-height: 1.05;
             margin-bottom: 24px;
-            letter-spacing: -0.03em;
+            letter-spacing: -0.04em;
+            color: var(--text);
         }
+
         .hero h1 .gradient {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--pink) 50%, var(--orange) 100%);
+            background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 60%, #f59e0b 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .hero p.subtitle {
-            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
-            color: var(--text-dim);
-            max-width: 600px;
+
+        .hero .subtitle {
+            font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+            color: var(--text-secondary);
+            max-width: 560px;
             margin-bottom: 48px;
+            font-weight: 400;
         }
+
         .hero-code {
-            background: var(--bg-code);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px 32px;
+            padding: 18px 32px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 16px;
-            position: relative;
             cursor: pointer;
-            transition: border-color 0.2s;
+            transition: all 0.3s;
+            margin-bottom: 12px;
         }
-        .hero-code:hover { border-color: var(--accent); }
-        .hero-code .prompt { color: var(--green); }
-        .hero-code .cmd { color: var(--text); }
-        .hero-code .copy {
-            color: var(--text-dim);
-            font-size: 13px;
+
+        .hero-code:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(139, 92, 246, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .hero-code .prompt {
+            color: var(--green);
+            font-weight: 600;
+        }
+
+        .hero-code .cmd {
+            color: var(--text);
+        }
+
+        .hero-code .copy-hint {
+            color: var(--text-tertiary);
             font-family: 'Inter', sans-serif;
+            font-size: 12px;
             opacity: 0;
             transition: opacity 0.2s;
         }
-        .hero-code:hover .copy { opacity: 1; }
-        .hero-hint {
-            color: var(--text-dim);
-            font-size: 14px;
+
+        .hero-code:hover .copy-hint {
+            opacity: 1;
         }
 
-        /* Stats bar */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1px;
-            background: var(--border);
-            border-radius: var(--radius);
-            overflow: hidden;
-            margin: 80px 0;
-        }
-        .stat {
-            background: var(--bg-card);
-            padding: 32px 24px;
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-        }
-        .stat-value.green { color: var(--green); }
-        .stat-value.accent { color: var(--accent); }
-        .stat-value.orange { color: var(--orange); }
-        .stat-value.pink { color: var(--pink); }
-        .stat-label {
-            color: var(--text-dim);
-            font-size: 13px;
-            margin-top: 4px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* How it works */
-        .section { padding: 80px 0; }
-        .section-title {
-            font-size: 2rem;
-            font-weight: 800;
-            margin-bottom: 12px;
-            letter-spacing: -0.02em;
-        }
-        .section-subtitle {
-            color: var(--text-dim);
-            font-size: 1.1rem;
-            margin-bottom: 48px;
-        }
-
-        .comparison {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-        }
-        .comparison-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 32px;
-        }
-        .comparison-card.enhanced {
-            border-color: rgba(99, 102, 241, 0.3);
-            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(99, 102, 241, 0.05) 100%);
-        }
-        .comparison-card h3 {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 24px;
-            font-weight: 600;
-        }
-        .comparison-card.before h3 { color: var(--text-dim); }
-        .comparison-card.enhanced h3 { color: var(--accent); }
-        .comparison-card ul {
-            list-style: none;
-        }
-        .comparison-card li {
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 15px;
-        }
-        .comparison-card li:last-child { border-bottom: none; }
-        .comparison-card li .icon { font-size: 18px; flex-shrink: 0; }
-
-        /* Three steps */
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            margin-top: 48px;
-        }
-        .step {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 32px;
-        }
-        .step-num {
-            width: 36px;
-            height: 36px;
-            background: var(--accent-glow);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-            color: var(--accent);
-            margin-bottom: 16px;
-        }
-        .step h3 {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
-        .step p { color: var(--text-dim); font-size: 14px; }
-        .step code {
-            display: block;
-            background: var(--bg-code);
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 13px;
+        .hero-code.copied .copy-hint {
+            opacity: 1;
             color: var(--green);
         }
 
-        /* CTA */
+        .hero-hint {
+            color: var(--text-tertiary);
+            font-size: 14px;
+        }
+
+        /* ── Stats ── */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 0 0 100px;
+        }
+
+        .stat {
+            padding: 28px 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .stat-value.purple {
+            color: var(--purple);
+        }
+
+        .stat-value.pink {
+            color: var(--pink);
+        }
+
+        .stat-value.green {
+            color: var(--green);
+        }
+
+        .stat-value.mint {
+            color: #6366f1;
+        }
+
+        .stat-label {
+            color: var(--text-tertiary);
+            font-size: 12px;
+            margin-top: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* ── Sections ── */
+        .section {
+            padding: 80px 0;
+        }
+
+        .section-label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--purple);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+        }
+
+        .section-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 48px;
+            max-width: 500px;
+        }
+
+        /* ── Comparison ── */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .comparison-card {
+            padding: 36px;
+            border-radius: var(--radius);
+        }
+
+        .comparison-card.before {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .comparison-card.enhanced {
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.04), rgba(236, 72, 153, 0.03));
+        }
+
+        .comparison-card h3 {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 24px;
+        }
+
+        .comparison-card.before h3 {
+            color: var(--text-tertiary);
+        }
+
+        .comparison-card.enhanced h3 {
+            color: var(--purple);
+        }
+
+        .comparison-card ul {
+            list-style: none;
+        }
+
+        .comparison-card li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        .comparison-card.enhanced li {
+            color: var(--text);
+        }
+
+        .comparison-card li:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-card li .icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        /* ── Steps ── */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 48px;
+        }
+
+        .step {
+            padding: 36px 28px;
+        }
+
+        .step-num {
+            width: 40px;
+            height: 40px;
+            background: var(--purple-soft);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--purple);
+            margin-bottom: 20px;
+        }
+
+        .step h3 {
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .step p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .step code {
+            display: block;
+            background: linear-gradient(135deg, var(--purple-soft), var(--pink-soft));
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-top: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            color: var(--purple);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+        }
+
+        /* ── CTA ── */
         .cta {
             text-align: center;
-            padding: 100px 24px;
+            padding: 100px 24px 120px;
         }
+
         .cta h2 {
-            font-size: 2.5rem;
+            font-size: clamp(2rem, 5vw, 3rem);
             font-weight: 900;
             margin-bottom: 16px;
             letter-spacing: -0.03em;
+            line-height: 1.1;
         }
+
         .cta p {
-            color: var(--text-dim);
+            color: var(--text-secondary);
             font-size: 1.1rem;
-            margin-bottom: 32px;
+            margin-bottom: 36px;
         }
+
         .cta-buttons {
             display: flex;
-            gap: 16px;
+            gap: 14px;
             justify-content: center;
             flex-wrap: wrap;
         }
+
         .btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
             padding: 14px 28px;
-            border-radius: 10px;
+            border-radius: 14px;
             font-weight: 600;
             font-size: 15px;
             text-decoration: none;
-            transition: all 0.2s;
-        }
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #5457e5;
-            transform: translateY(-1px);
-            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
-        }
-        .btn-secondary {
-            background: var(--bg-code);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-        .btn-secondary:hover {
-            border-color: var(--accent);
-            transform: translateY(-1px);
+            transition: all 0.3s;
         }
 
-        /* Footer */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--purple), var(--pink));
+            color: white;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35);
+        }
+
+        .btn-secondary {
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        /* ── Footer ── */
         footer {
-            border-top: 1px solid var(--border);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
             padding: 32px 24px;
             text-align: center;
-            color: var(--text-dim);
+            color: var(--text-tertiary);
             font-size: 14px;
         }
-        footer a { color: var(--accent); text-decoration: none; }
-        footer a:hover { text-decoration: underline; }
 
-        /* Mobile */
+        footer a {
+            color: var(--purple);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Mobile ── */
         @media (max-width: 768px) {
-            .stats { grid-template-columns: repeat(2, 1fr); }
-            .comparison { grid-template-columns: 1fr; }
-            .steps { grid-template-columns: 1fr; }
-            .hero-code { font-size: 0.9rem; padding: 16px 20px; }
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            nav {
+                padding: 8px 16px;
+                gap: 12px;
+            }
+
+            nav a {
+                font-size: 12px;
+            }
         }
 
-        /* Animations */
+        /* ── Animations ── */
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        .hero > * { animation: fadeUp 0.6s ease-out backwards; }
-        .hero .badge { animation-delay: 0.1s; }
-        .hero h1 { animation-delay: 0.2s; }
-        .hero .subtitle { animation-delay: 0.3s; }
-        .hero .hero-code { animation-delay: 0.4s; }
+
+        .hero>* {
+            animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+
+        .hero .badge {
+            animation-delay: 0.05s;
+        }
+
+        .hero h1 {
+            animation-delay: 0.15s;
+        }
+
+        .hero .subtitle {
+            animation-delay: 0.25s;
+        }
+
+        .hero .hero-code {
+            animation-delay: 0.35s;
+        }
+
+        .hero .hero-hint {
+            animation-delay: 0.4s;
+        }
     </style>
 </head>
+
 <body>
 
-<!-- Hero -->
-<section class="hero">
-    <span class="badge">v0.1.2 · Apache 2.0 · SWE-bench Verified</span>
-    <h1><span class="gradient">Stop wasting tokens</span><br>on bad prompts.</h1>
-    <p class="subtitle">Salacia is the runtime that makes any AI coding agent smarter, faster, and cheaper.</p>
-    <div class="hero-code" onclick="navigator.clipboard.writeText('npx salacia init')">
-        <span class="prompt">$</span>
-        <span class="cmd">npx salacia init</span>
-        <span class="copy">click to copy</span>
+    <!-- Diffusion background orbs -->
+    <div class="diffusion-bg">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
     </div>
-    <p class="hero-hint">Works with Claude Code, Codex, Cursor, Cline, and more.</p>
-</section>
 
-<!-- Stats -->
-<div class="container">
-    <div class="stats">
-        <div class="stat">
-            <div class="stat-value green">+6%</div>
-            <div class="stat-label">More Bugs Solved</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value accent">93%</div>
-            <div class="stat-label">FL Accuracy</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value orange">2.2:1</div>
-            <div class="stat-label">Win : Fallback</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value pink">117</div>
-            <div class="stat-label">Tasks Tested</div>
-        </div>
-    </div>
-</div>
+    <!-- Nav -->
+    <nav class="glass">
+        <span class="logo">Salacia</span>
+        <a href="#how">How It Works</a>
+        <a href="#data">Benchmarks</a>
+        <a href="https://github.com/StartripAI/Salacia">GitHub</a>
+    </nav>
 
-<!-- Comparison -->
-<section class="section">
-    <div class="container">
-        <h2 class="section-title">Your AI agent is blind without context.</h2>
-        <p class="section-subtitle">Salacia gives it eyes.</p>
-        <div class="comparison">
-            <div class="comparison-card before">
-                <h3>❌ Without Salacia</h3>
-                <ul>
-                    <li><span class="icon">🔍</span> Agent searches entire repo</li>
-                    <li><span class="icon">🔄</span> 10+ turns of trial and error</li>
-                    <li><span class="icon">💸</span> Wastes tokens on wrong files</li>
-                    <li><span class="icon">❓</span> "It compiled" = done</li>
-                </ul>
+    <!-- Hero -->
+    <section class="hero">
+        <span class="badge">✦ SWE-bench Verified · 117 Tasks Tested</span>
+        <h1><span class="gradient">Stop wasting tokens</span><br>on bad prompts.</h1>
+        <p class="subtitle">Salacia is the runtime that makes any AI coding agent smarter, faster, and cheaper.</p>
+        <div class="hero-code glass"
+            onclick="navigator.clipboard.writeText('npx salacia init');this.classList.add('copied');this.querySelector('.copy-hint').textContent='Copied!'">
+            <span class="prompt">$</span>
+            <span class="cmd">npx salacia init</span>
+            <span class="copy-hint">click to copy</span>
+        </div>
+        <p class="hero-hint">Works with Claude Code · Codex · Cursor · Cline · any agent</p>
+    </section>
+
+    <!-- Stats -->
+    <div class="container" id="data">
+        <div class="stats">
+            <div class="stat glass">
+                <div class="stat-value green">+6%</div>
+                <div class="stat-label">More Bugs Solved</div>
             </div>
-            <div class="comparison-card enhanced">
-                <h3>✅ With Salacia</h3>
-                <ul>
-                    <li><span class="icon">🎯</span> Agent reads 2-3 targeted files</li>
-                    <li><span class="icon">⚡</span> 3-5 focused turns</li>
-                    <li><span class="icon">📍</span> 93% accurate fault localization</li>
-                    <li><span class="icon">✔️</span> Contract-verified correctness</li>
-                </ul>
+            <div class="stat glass">
+                <div class="stat-value purple">93%</div>
+                <div class="stat-label">FL Accuracy</div>
+            </div>
+            <div class="stat glass">
+                <div class="stat-value pink">2.2:1</div>
+                <div class="stat-label">Win Ratio</div>
+            </div>
+            <div class="stat glass">
+                <div class="stat-value mint">117</div>
+                <div class="stat-label">Tasks Tested</div>
             </div>
         </div>
     </div>
-</section>
 
-<!-- How it works -->
-<section class="section">
-    <div class="container">
-        <h2 class="section-title">Three commands. That's it.</h2>
-        <p class="section-subtitle">From vibe to verified fix in under a minute.</p>
-        <div class="steps">
-            <div class="step">
-                <div class="step-num">1</div>
-                <h3>Plan</h3>
-                <p>Parse your intent into a contract with fault-localized context.</p>
-                <code>salacia plan "fix the auth bug"</code>
-            </div>
-            <div class="step">
-                <div class="step-num">2</div>
-                <h3>Execute</h3>
-                <p>Dispatch to your agent with targeted files and test guidance.</p>
-                <code>salacia execute --adapter claude-code</code>
-            </div>
-            <div class="step">
-                <div class="step-num">3</div>
-                <h3>Validate</h3>
-                <p>Verify against the contract. Not "it compiled" — it's correct.</p>
-                <code>salacia validate</code>
+    <!-- Comparison -->
+    <section class="section" id="how">
+        <div class="container">
+            <p class="section-label">The Problem</p>
+            <h2 class="section-title">Your AI agent is flying blind.</h2>
+            <p class="section-subtitle">Salacia gives it a map, a compass, and a verification contract.</p>
+            <div class="comparison">
+                <div class="comparison-card before">
+                    <h3>Without Salacia</h3>
+                    <ul>
+                        <li><span class="icon">🔍</span> Agent searches the entire repo</li>
+                        <li><span class="icon">🔄</span> 10+ turns of trial and error</li>
+                        <li><span class="icon">💸</span> Wastes tokens on wrong files</li>
+                        <li><span class="icon">❓</span> "It compiled" = done</li>
+                    </ul>
+                </div>
+                <div class="comparison-card enhanced glass">
+                    <h3>With Salacia</h3>
+                    <ul>
+                        <li><span class="icon">🎯</span> Agent reads 2–3 targeted files</li>
+                        <li><span class="icon">⚡</span> 3–5 focused turns</li>
+                        <li><span class="icon">📍</span> 93% accurate fault localization</li>
+                        <li><span class="icon">✔️</span> Contract-verified correctness</li>
+                    </ul>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- CTA -->
-<section class="cta">
-    <h2>Your code runs on Node.<br>Your AI agent runs on <span style="color: var(--accent)">Salacia</span>.</h2>
-    <p>One command to start. Apache 2.0 licensed. Works with any agent.</p>
-    <div class="cta-buttons">
-        <a href="https://github.com/StartripAI/Salacia" class="btn btn-primary">⭐ GitHub</a>
-        <a href="https://www.npmjs.com/package/salacia" class="btn btn-secondary">📦 npm</a>
-    </div>
-</section>
+    <!-- Steps -->
+    <section class="section">
+        <div class="container">
+            <p class="section-label">How It Works</p>
+            <h2 class="section-title">Three commands. That's it.</h2>
+            <p class="section-subtitle">From vibe to verified fix in under a minute.</p>
+            <div class="steps">
+                <div class="step glass">
+                    <div class="step-num">1</div>
+                    <h3>Plan</h3>
+                    <p>Parse your intent into a contract with fault-localized context.</p>
+                    <code>salacia plan "fix the auth bug"</code>
+                </div>
+                <div class="step glass">
+                    <div class="step-num">2</div>
+                    <h3>Execute</h3>
+                    <p>Dispatch to your agent with targeted files and test guidance.</p>
+                    <code>salacia execute --adapter claude-code</code>
+                </div>
+                <div class="step glass">
+                    <div class="step-num">3</div>
+                    <h3>Validate</h3>
+                    <p>Verify against the contract — not just "it compiled."</p>
+                    <code>salacia validate</code>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<footer>
-    <p>Made by <a href="https://github.com/StartripAI">StartripAI</a> · <a href="https://github.com/StartripAI/Salacia">Source</a> · Apache-2.0</p>
-</footer>
+    <!-- CTA -->
+    <section class="cta">
+        <h2>Your code runs on Node.<br>Your AI agent runs on <span style="color: var(--purple)">Salacia</span>.</h2>
+        <p>One command. Apache 2.0 licensed. Works with any agent.</p>
+        <div class="cta-buttons">
+            <a href="https://github.com/StartripAI/Salacia" class="btn btn-primary">⭐ Star on GitHub</a>
+            <a href="https://www.npmjs.com/package/salacia" class="btn btn-secondary glass">📦 View on npm</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>Made by <a href="https://github.com/StartripAI">StartripAI</a> · <a
+                href="https://github.com/StartripAI/Salacia/blob/main/LICENSE">Apache-2.0</a></p>
+    </footer>
 
 </body>
+
 </html>
