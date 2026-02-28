@@ -32,7 +32,7 @@
     </nav>
 
     <section class="hero">
-        <span class="badge" data-i18n="badge">✦ SWE-bench Verified · 117 Tasks Tested</span>
+        <span class="badge" data-i18n="badge">✦ SWE-bench Verified · Claude Opus 4.6 & Sonnet 4.6</span>
         <h1><span class="gradient" data-i18n="hero_gradient">Stop wasting tokens</span><br><span
                 data-i18n="hero_rest">on bad prompts.</span></h1>
         <p class="subtitle" data-i18n="subtitle">Salacia is the runtime that makes any AI coding agent smarter, faster,
@@ -42,26 +42,27 @@
             <span class="cmd">npx salacia init</span>
             <span class="copy-hint" data-i18n="copy">click to copy</span>
         </div>
-        <p class="hero-hint" data-i18n="compat">Works with Claude Code · Codex · Cursor · Cline · any agent</p>
+        <p class="hero-hint" data-i18n="compat">Works with Claude Code · Cursor · Codex · Cline · Windsurf · Antigravity
+        </p>
     </section>
 
     <div class="container" id="data">
         <div class="stats">
             <div class="stat glass">
-                <div class="stat-value green">+6%</div>
-                <div class="stat-label" data-i18n="stat_bugs">More Bugs Solved</div>
+                <div class="stat-value purple" data-i18n="stat1_val">93.4%</div>
+                <div class="stat-label" data-i18n="stat1_label">FL Top-5 Recall</div>
             </div>
             <div class="stat glass">
-                <div class="stat-value purple">93%</div>
-                <div class="stat-label" data-i18n="stat_fl">FL Accuracy</div>
+                <div class="stat-value green" data-i18n="stat2_val">+6.0pp</div>
+                <div class="stat-label" data-i18n="stat2_label">Paired A/B Pass Rate Uplift</div>
             </div>
             <div class="stat glass">
-                <div class="stat-value pink">2.2:1</div>
-                <div class="stat-label" data-i18n="stat_win">Win Ratio</div>
+                <div class="stat-value pink" data-i18n="stat3_val">p&lt;0.01</div>
+                <div class="stat-label" data-i18n="stat3_label">McNemar's Test Significance</div>
             </div>
             <div class="stat glass">
-                <div class="stat-value mint">117</div>
-                <div class="stat-label" data-i18n="stat_tasks">Tasks Tested</div>
+                <div class="stat-value mint" data-i18n="stat4_val">500+</div>
+                <div class="stat-label" data-i18n="stat4_label">SWE-bench Tasks Evaluated</div>
             </div>
         </div>
     </div>
@@ -98,25 +99,34 @@
     <section class="section">
         <div class="container">
             <p class="section-label" data-i18n="how_label">How It Works</p>
-            <h2 class="section-title" data-i18n="how_title">Three commands. That's it.</h2>
-            <p class="section-subtitle" data-i18n="how_subtitle">From vibe to verified fix in under a minute.</p>
-            <div class="steps">
+            <h2 class="section-title" data-i18n="how_title">Four steps. Two minutes.</h2>
+            <p class="section-subtitle" data-i18n="how_subtitle">Install once, then add one layer before your AI edits
+                code.</p>
+            <div class="steps steps-4">
+                <div class="step glass">
+                    <div class="step-num">0</div>
+                    <h3 data-i18n="step0_title">Install</h3>
+                    <p data-i18n="step0_desc">One command to install. Or skip and use npx directly.</p>
+                    <code>npm install -g salacia</code>
+                </div>
                 <div class="step glass">
                     <div class="step-num">1</div>
                     <h3 data-i18n="step1_title">Plan</h3>
-                    <p data-i18n="step1_desc">Parse your intent into a contract with fault-localized context.</p>
+                    <p data-i18n="step1_desc">Describe the bug in plain English. Salacia analyzes your project and
+                        locates the files to fix.</p>
                     <code>salacia plan "fix the auth bug"</code>
                 </div>
                 <div class="step glass">
                     <div class="step-num">2</div>
                     <h3 data-i18n="step2_title">Execute</h3>
-                    <p data-i18n="step2_desc">Dispatch to your agent with targeted files and test guidance.</p>
+                    <p data-i18n="step2_desc">Hand the localized context to your AI agent. It edits with a map, not a
+                        blindfold.</p>
                     <code>salacia execute --adapter claude-code</code>
                 </div>
                 <div class="step glass">
                     <div class="step-num">3</div>
                     <h3 data-i18n="step3_title">Validate</h3>
-                    <p data-i18n="step3_desc">Verify against the contract, not just "it compiled."</p>
+                    <p data-i18n="step3_desc">Run tests automatically. Not "I think it works" — tests actually pass.</p>
                     <code>salacia validate</code>
                 </div>
             </div>
