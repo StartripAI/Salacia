@@ -1,0 +1,293 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://salacia.dev/schemas/benchmark-report-v1.json",
+  "title": "Salacia Benchmark Report v1",
+  "type": "object",
+  "required": [
+    "metadata",
+    "config",
+    "probeCount",
+    "probes",
+    "dimensions",
+    "overall",
+    "reportPath",
+    "rawDir",
+    "normalizedDir"
+  ],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": [
+        "runId",
+        "generatedAt",
+        "suite",
+        "repeats",
+        "seed",
+        "gitCommit",
+        "nodeVersion",
+        "platform",
+        "arch",
+        "cpuModel",
+        "cpuCount",
+        "memoryBytes",
+        "datasetHash"
+      ],
+      "properties": {
+        "runId": { "type": "string", "minLength": 1 },
+        "generatedAt": { "type": "string", "minLength": 1 },
+        "suite": { "enum": ["core", "scale", "full"] },
+        "repeats": { "type": "integer", "minimum": 1 },
+        "seed": { "type": "integer" },
+        "gitCommit": { "type": "string", "minLength": 1 },
+        "nodeVersion": { "type": "string", "minLength": 1 },
+        "platform": { "type": "string", "minLength": 1 },
+        "arch": { "type": "string", "minLength": 1 },
+        "cpuModel": { "type": "string", "minLength": 1 },
+        "cpuCount": { "type": "integer", "minimum": 1 },
+        "memoryBytes": { "type": "integer", "minimum": 1 },
+        "datasetHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "required": ["suite", "repeats", "seed", "includeHidden", "scale"],
+      "properties": {
+        "suite": { "enum": ["core", "scale", "full"] },
+        "repeats": { "type": "integer", "minimum": 1 },
+        "seed": { "type": "integer" },
+        "includeHidden": { "type": "boolean" },
+        "scale": {
+          "type": "object",
+          "required": ["targetFiles", "concurrency", "soakHours"],
+          "properties": {
+            "targetFiles": { "type": "integer", "minimum": 1 },
+            "concurrency": { "type": "integer", "minimum": 1 },
+            "soakHours": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "probeCount": { "type": "integer", "minimum": 1 },
+    "probes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description",
+          "critical",
+          "hidden",
+          "competitorComparable",
+          "functionalPass",
+          "qualityScore",
+          "reliabilityScore",
+          "dimensionScore",
+          "evidenceRefs"
+        ],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "dimension": {
+            "enum": [
+              "prompt_quality",
+              "contract_integrity",
+              "convergence_robustness",
+              "execution_governance",
+              "ide_native_depth",
+              "protocol_behavior",
+              "scale_stability",
+              "compliance_audit",
+              "anti_gaming"
+            ]
+          },
+          "description": { "type": "string", "minLength": 1 },
+          "critical": { "type": "boolean" },
+          "hidden": { "type": "boolean" },
+          "competitorComparable": { "type": "boolean" },
+          "functionalPass": { "enum": [0, 1] },
+          "qualityScore": { "type": "number", "minimum": 0, "maximum": 10 },
+          "reliabilityScore": { "type": "number", "minimum": 0, "maximum": 10 },
+          "dimensionScore": { "type": "number", "minimum": 0, "maximum": 10 },
+          "evidenceRefs": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "dimensions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "dimension",
+          "cases",
+          "functionalPassRate",
+          "qualityScore",
+          "reliabilityScore",
+          "dimensionScore"
+        ],
+        "properties": {
+          "dimension": {
+            "enum": [
+              "prompt_quality",
+              "contract_integrity",
+              "convergence_robustness",
+              "execution_governance",
+              "ide_native_depth",
+              "protocol_behavior",
+              "scale_stability",
+              "compliance_audit",
+              "anti_gaming"
+            ]
+          },
+          "cases": { "type": "integer", "minimum": 1 },
+          "functionalPassRate": { "type": "number", "minimum": 0, "maximum": 1 },
+          "qualityScore": { "type": "number", "minimum": 0, "maximum": 10 },
+          "reliabilityScore": { "type": "number", "minimum": 0, "maximum": 10 },
+          "dimensionScore": { "type": "number", "minimum": 0, "maximum": 10 }
+        }
+      }
+    },
+    "overall": {
+      "type": "object",
+      "required": ["functionalPassRate", "qualityScore", "reliabilityScore", "score"],
+      "properties": {
+        "functionalPassRate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "qualityScore": { "type": "number", "minimum": 0, "maximum": 10 },
+        "reliabilityScore": { "type": "number", "minimum": 0, "maximum": 10 },
+        "score": { "type": "number", "minimum": 0, "maximum": 10 }
+      }
+    },
+    "reportPath": { "type": "string", "minLength": 1 },
+    "rawDir": { "type": "string", "minLength": 1 },
+    "normalizedDir": { "type": "string", "minLength": 1 }
+  },
+  "$defs": {
+    "dimensionValue": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 10
+    },
+    "dimensionProvenance": {
+      "enum": ["measured", "profiled", "unavailable"]
+    },
+    "comparisonRow": {
+      "type": "object",
+      "required": [
+        "dimension",
+        "salacia",
+        "competitor",
+        "outcome",
+        "salaciaScoreSource",
+        "competitorDimensionProvenance",
+        "methodPair",
+        "methodMismatch",
+        "comparable"
+      ],
+      "properties": {
+        "dimension": {
+          "enum": [
+            "prompt_quality",
+            "contract_integrity",
+            "convergence_robustness",
+            "execution_governance",
+            "ide_native_depth",
+            "protocol_behavior",
+            "scale_stability",
+            "compliance_audit",
+            "anti_gaming"
+          ]
+        },
+        "salacia": { "$ref": "#/$defs/dimensionValue" },
+        "competitor": { "$ref": "#/$defs/dimensionValue" },
+        "outcome": { "enum": ["win", "loss", "parity", "excluded"] },
+        "salaciaScoreSource": { "enum": ["internal-benchmark", "external-competitor-run"] },
+        "competitorDimensionProvenance": { "$ref": "#/$defs/dimensionProvenance" },
+        "methodPair": {
+          "enum": [
+            "external-vs-measured",
+            "external-vs-profiled",
+            "external-vs-unavailable",
+            "internal-vs-measured",
+            "internal-vs-profiled",
+            "internal-vs-unavailable"
+          ]
+        },
+        "excludedReason": {
+          "enum": ["unavailable", "method-mismatch", "not-supported"]
+        },
+        "methodMismatch": { "type": "boolean" },
+        "comparable": { "type": "boolean" }
+      }
+    },
+    "competitorRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "license",
+        "source",
+        "sampledAt",
+        "provenance",
+        "evidenceRefs",
+        "dimensions"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["open-source", "closed-source"] },
+        "license": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "minLength": 1 },
+        "sampledAt": { "type": "string", "minLength": 1 },
+        "provenance": { "enum": ["measured", "profiled"] },
+        "evidenceRefs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+        "dimensions": {
+          "type": "object",
+          "required": [
+            "prompt_quality",
+            "contract_integrity",
+            "convergence_robustness",
+            "execution_governance",
+            "ide_native_depth",
+            "protocol_behavior",
+            "scale_stability",
+            "compliance_audit",
+            "anti_gaming"
+          ],
+          "properties": {
+            "prompt_quality": { "$ref": "#/$defs/dimensionValue" },
+            "contract_integrity": { "$ref": "#/$defs/dimensionValue" },
+            "convergence_robustness": { "$ref": "#/$defs/dimensionValue" },
+            "execution_governance": { "$ref": "#/$defs/dimensionValue" },
+            "ide_native_depth": { "$ref": "#/$defs/dimensionValue" },
+            "protocol_behavior": { "$ref": "#/$defs/dimensionValue" },
+            "scale_stability": { "$ref": "#/$defs/dimensionValue" },
+            "compliance_audit": { "$ref": "#/$defs/dimensionValue" },
+            "anti_gaming": { "$ref": "#/$defs/dimensionValue" }
+          }
+        },
+        "dimensionProvenance": {
+          "type": "object",
+          "properties": {
+            "prompt_quality": { "$ref": "#/$defs/dimensionProvenance" },
+            "contract_integrity": { "$ref": "#/$defs/dimensionProvenance" },
+            "convergence_robustness": { "$ref": "#/$defs/dimensionProvenance" },
+            "execution_governance": { "$ref": "#/$defs/dimensionProvenance" },
+            "ide_native_depth": { "$ref": "#/$defs/dimensionProvenance" },
+            "protocol_behavior": { "$ref": "#/$defs/dimensionProvenance" },
+            "scale_stability": { "$ref": "#/$defs/dimensionProvenance" },
+            "compliance_audit": { "$ref": "#/$defs/dimensionProvenance" },
+            "anti_gaming": { "$ref": "#/$defs/dimensionProvenance" }
+          }
+        }
+      }
+    }
+  }
+}

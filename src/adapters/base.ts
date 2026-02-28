@@ -17,6 +17,10 @@ import type {
   ValidationResult
 } from "../core/types.js";
 import { getSalaciaPaths } from "../core/paths.js";
+import {
+  commandExists as commandExistsOnClient,
+  resolveUserCliCommand
+} from "../core/client-endpoints.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -34,7 +38,7 @@ export interface ExecutorAdapter {
 
 export interface DispatchContext {
   cwd: string;
-  mode: "auto" | "cli" | "sdk";
+  mode: "auto" | "cli";
   dryRun: boolean;
 }
 
@@ -159,16 +163,11 @@ export abstract class UnifiedBridgeAdapter implements ExecutorAdapter {
 }
 
 export async function commandExists(command: string): Promise<boolean> {
-  try {
-    if (process.platform === "win32") {
-      await execFileAsync("where", [command]);
-    } else {
-      await execFileAsync("sh", ["-lc", `command -v ${command}`]);
-    }
-    return true;
-  } catch {
-    return false;
-  }
+  return commandExistsOnClient(command);
+}
+
+export async function resolveCommand(command: string): Promise<string | null> {
+  return resolveUserCliCommand(command);
 }
 
 export async function runCommand(

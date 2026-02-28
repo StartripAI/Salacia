@@ -1,139 +1,119 @@
 # Salacia
 
-Salacia is a repo-first Agentic Engineering OS that turns vibe coding into production-grade delivery with explicit contracts, governance, and cross-executor orchestration.
+> **The Runtime for AI Coding Agents**
+>
+> Your code runs on Node. Your AI agent runs on Salacia.
 
-## North Star
-Deliver reliable software outcomes by enforcing one auditable flow:
-
-1. Vibe -> Contract/Spec/Plan
-2. Converge (3-advisor decision)
-3. Execute (unified adapter bridge)
-4. Verify + snapshot evidence
-5. Converge again before release gates
-
-## Quickstart (2 commands)
+## 5 Seconds to Start
 
 ```bash
+npx salacia init
+```
+
+## 1 Minute to Learn
+
+```bash
+# Tell it what you want (natural language)
+npx salacia plan "add JWT authentication"
+
+# Dispatch to your AI coding agent
+npx salacia execute --adapter claude-code
+
+# Verify the result against the contract
+npx salacia validate
+```
+
+## What Just Happened?
+
+1. **`plan`** — Salacia parsed your vibe into a Contract (what) + Spec (how) + Plan (steps), then pre-analyzed your codebase with fault localization
+2. **`execute`** — Dispatched to Claude Code with targeted context — the agent reads fewer files, wastes fewer tokens, and fixes bugs faster
+3. **`validate`** — Verified results against the contract, not just "it compiles"
+
+**Result:** Same model, same task — agents with Salacia solve **+6% more bugs** while using **fewer tokens** ([see benchmarks](#benchmarks)).
+
+## Why Salacia?
+
+Salacia is **not** another AI coding agent. It's the layer that makes your existing agents better:
+
+| Without Salacia | With Salacia |
+|-----------------|-------------|
+| Agent searches entire repo | Agent reads 2-3 targeted files |
+| 10+ turns of trial and error | 3-5 focused turns |
+| Wastes tokens on wrong files | 93% accurate fault localization |
+| "It compiled" = done | Contract-verified correctness |
+
+## Benchmarks
+
+Tested on **117 SWE-bench Verified tasks** across two models:
+
+| Metric | Value |
+|--------|-------|
+| Pass rate uplift | **+6pp** (56.4% → 62.4%) |
+| Win : Fallback ratio | **2.2 : 1** |
+| FL accuracy (Top-5) | **93%** |
+| Both models improved | ✅ Sonnet +6.9pp, Opus +3.3pp |
+
+## CLI Reference
+
+```bash
+salacia init                    # Initialize .salacia in your repo
+salacia plan "<vibe>"           # Vibe → Contract + Spec + Plan
+salacia execute --adapter <a>   # Dispatch to agent
+salacia validate                # Verify against contract
+salacia status                  # Current state
+salacia doctor                  # Compatibility check
+salacia snapshot                # Create rollback point
+salacia rollback [id]           # Revert to snapshot
+salacia converge --stage <s>    # Run advisor convergence
+salacia adapters list           # Show available adapters
+salacia benchmark <action>      # Run benchmarks
+salacia mcp-server              # Start MCP server
+```
+
+## Adapters
+
+| Target | Kind | Status |
+|--------|------|--------|
+| claude-code | executor | GA |
+| codex | executor | GA |
+| opencode | executor | beta |
+| cursor | IDE bridge | bridge |
+| cline | IDE bridge | bridge |
+| vscode | IDE bridge | bridge |
+| antigravity | IDE bridge | bridge |
+
+## Install
+
+```bash
+# Use without install
+npx salacia init
+
+# Or install globally
 npm i -g salacia
-salacia init
+
+# Or from source
+git clone https://github.com/StartripAI/Salacia.git
+cd Salacia && npm install && npm run build
 ```
-
-## CLI (v0.1.2)
-
-```bash
-salacia init
-salacia plan "<vibe>"
-salacia prompt compile "<input>" --json
-salacia prompt test --input <intent-ir.json> --json
-salacia prompt optimize --from-journal --json
-salacia converge --stage plan|exec --input <path> --external --json
-salacia validate --json
-salacia guard consistency --json
-salacia execute --adapter <name> --dry-run --mode auto|cli|sdk --json
-salacia snapshot --label <label> --json
-salacia rollback [snapshot-id] --json
-salacia status --json
-salacia adapters list|check|matrix --json
-salacia doctor --matrix --json
-salacia audit superiority --profile docs/benchmarks/trellis-baseline.v1.json --json
-```
-
-`plan` now runs prompt compilation (`parse -> type-check -> auto-correct -> metamorphic test`) before contract generation.  
-`execute` enforces `converge(plan)` before dispatch and `converge(exec)` after verification, with consistency safety-net blocking high-risk regressions.
-
-## Compatibility Matrix (v0.1)
-
-### Platforms
-
-- macOS: full support
-- Linux: full support
-- Windows: full support (Codex route uses WSL)
-
-### Targets and Capabilities
-
-| Target | Kind | Support | Capabilities | Notes |
-| --- | --- | --- | --- | --- |
-| claude-code | executor | ga | plan, execute, verify, rollback | SDK-first, CLI fallback |
-| codex | executor | ga | plan, execute, verify, rollback | Windows route uses WSL |
-| opencode | executor | beta | plan, execute, verify, rollback, bridge-status | ACP subprocess compatible |
-| cursor | ide-bridge | bridge | bridge-rules, bridge-tasks, approve, bridge-status | syncs `.cursor/rules` |
-| cline | ide-bridge | bridge | bridge-tasks, approve, verify, bridge-status | step markdown bridge |
-| vscode | ide-bridge | bridge | bridge-rules, bridge-tasks, approve, bridge-status | writes `.vscode/tasks.json` |
-| antigravity | ide-bridge | bridge | bridge-rules, bridge-tasks, approve, bridge-status | v0.1 bridge mode |
-
-### Codex Boundaries
-
-- Codex CLI: native on macOS/Linux, Windows through WSL
-- Codex App: macOS Apple Silicon only (informational, not required by runtime)
 
 ## Architecture
 
-- Interaction Layer: CLI, IDE bridges, CI hooks
-- Kernel Layer: Contract compiler, plan engine, convergence engine, execution orchestrator
-- Guardian Layer: drift detector, snapshot manager, rollback engine, verification loop, progress tracker
-- Adapter Layer: unified bridge adapters for executors and IDEs
-- Protocol Layer: MCP gateway/server + ACP (A2A + OpenCode subprocess)
-- Persistence Layer: `.salacia/contracts`, `.salacia/specs`, `.salacia/plans`, `.salacia/journal`, `.salacia/snapshots`, `.salacia/progress`
+```
+Interaction Layer    CLI, IDE bridges, CI hooks
+Kernel Layer         Contract compiler, plan engine, convergence
+Guardian Layer       Drift detector, snapshot, rollback, verification
+Adapter Layer        Unified bridge adapters for executors/IDEs
+Protocol Layer       MCP gateway + ACP (A2A + subprocess)
+Persistence          .salacia/contracts, specs, plans, journal, snapshots
+```
 
-See docs:
+## Links
+
 - [Architecture](docs/ARCHITECTURE.md)
 - [Adapters](docs/ADAPTERS.md)
 - [Protocols](docs/PROTOCOLS.md)
-- [Operations](docs/OPERATIONS.md)
-- [Release](docs/RELEASE.md)
-- [Trellis Mapping](docs/TRELLIS_MAPPING.md)
-- [Clean-Room Reuse](docs/CLEAN_ROOM_REUSE.md)
-
-## Auditable Superiority
-
-Salacia does not ask for trust by claim. It ships a reproducible audit that scores capability strength against a locked baseline profile.
-
-Run:
-
-```bash
-salacia audit superiority --profile docs/benchmarks/trellis-baseline.v1.json --json
-```
-
-The report includes:
-- weighted check results,
-- required-failure list,
-- strength-signal count,
-- baseline comparison target,
-- evidence references for each check,
-- persisted report path in `.salacia/journal/superiority-audit-*.json`.
-
-If `strongerThanBaseline=false`, release gate fails.
-
-## Convergence Policy
-
-Three advisors participate in plan and exec stages:
-
-- Codex (local policy advisor)
-- Claude CLI (Opus 4.6)
-- Gemini CLI (3.1 Pro target, fallback to available Pro model)
-
-Rules:
-
-- 2/3 majority required (`approve` or `reject`)
-- split/abstain outcome requires human approval
-- release gate fails on missing advisor evidence, malformed advisor output, or unresolved split
-- GitHub workflows use deterministic mock advisor scripts only (no external advisor API calls)
-
-## Security Model
-
-- No plaintext secrets in source, docs, templates, or logs
-- Claude calls only set `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN` at invocation time
-- Secret scan is part of CI and release gate
-- Protected paths can be blocked through contract guardrails
-- GitHub workflows do not inject external advisor API keys for convergence checks
-
-See [SECURITY.md](SECURITY.md) for incident response and key rotation.
-
-## Release Policy
-
-- Stable release in scope: GitHub release tag `v0.1.2`
-- npm public publish is intentionally out of scope for this cycle
-- Release is blocked unless CI and release gate pass
+- [Security](SECURITY.md)
+- [Contributing](CONTRIBUTING.md)
 
 ## License
 

@@ -1,9 +1,27 @@
 {
   "name": "salacia",
   "version": "0.1.2",
-  "description": "Salacia - repo-first Agentic Engineering OS",
+  "description": "The runtime that makes any AI coding agent smarter, faster, and cheaper",
   "type": "module",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StartripAI/Salacia.git"
+  },
+  "homepage": "https://github.com/StartripAI/Salacia",
+  "bugs": {
+    "url": "https://github.com/StartripAI/Salacia/issues"
+  },
+  "keywords": [
+    "ai",
+    "coding-agent",
+    "runtime",
+    "fault-localization",
+    "swe-bench",
+    "agentic",
+    "developer-tools",
+    "llm"
+  ],
   "bin": {
     "salacia": "dist/cli/index.js"
   },
@@ -17,8 +35,11 @@
     "build": "tsup src/cli/index.ts src/index.ts --format esm --dts --sourcemap --clean",
     "typecheck": "tsc --noEmit",
     "lint": "npm run typecheck",
-    "test": "vitest run",
+    "test": "vitest run --exclude tests/integration.test.ts --exclude tests/e2e-cli-fullflow.real.test.ts --exclude tests/e2e-failures.real.test.ts",
     "test:watch": "vitest",
+    "test:e2e:fullflow": "vitest run tests/integration.test.ts",
+    "test:e2e:fullflow:real": "vitest run --maxWorkers=1 tests/integration.test.ts tests/e2e-cli-fullflow.real.test.ts",
+    "test:e2e:failures:real": "vitest run tests/e2e-failures.real.test.ts",
     "smoke": "node dist/cli/index.js --help && node dist/cli/index.js doctor --matrix",
     "audit:superiority": "node dist/cli/index.js audit superiority --json",
     "secret:scan": "node scripts/secret-scan.mjs",
@@ -30,7 +51,6 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.2.50",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "ajv": "^8.17.1",
     "commander": "^14.0.3",

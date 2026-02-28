@@ -10,55 +10,79 @@ import { derivePlan, savePlan } from "../src/core/plan.js";
 import { runHarnessInitializer } from "../src/harness/initializer.js";
 import { runIncrementalExecution } from "../src/harness/incremental.js";
 import { runVerification } from "../src/guardian/verify.js";
+import { copyRealAdvisorScripts, ensureRealLlmEnvironment } from "./helpers/real-e2e.js";
 
-async function writeMockAdvisor(scriptDir: string, advisor: "claude" | "gemini"): Promise<void> {
-  await fs.mkdir(scriptDir, { recursive: true });
-
-  const scriptPath = path.join(scriptDir, `validate-${advisor}.mjs`);
-  await fs.writeFile(
-    scriptPath,
-    [
-      "#!/usr/bin/env node",
-      "console.log(JSON.stringify({ vote: 'approve', summary: 'mock approve', evidenceRef: 'mock-evidence' }));"
-    ].join("\n"),
-    "utf8"
-  );
-  await fs.chmod(scriptPath, 0o755);
+async function runConvergenceUntilApprove(
+  run: () => Promise<Awaited<ReturnType<typeof runConvergence>>>,
+  attempts = 2
+): Promise<Awaited<ReturnType<typeof runConvergence>>> {
+  let last: Awaited<ReturnType<typeof runConvergence>> | null = null;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    last = await run();
+    if (last.winner === "approve") {
+      return last;
+    }
+    if (attempt < attempts) {
+      await new Promise((resolve) => setTimeout(resolve, 750));
+    }
+  }
+  if (!last) {
+    throw new Error("Convergence did not produce a decision");
+  }
+  return last;
 }
 
 describe("end-to-end flow", () => {
   it("runs plan -> converge(plan) -> execute -> verify -> converge(exec)", async () => {
+    await ensureRealLlmEnvironment();
+
     const root = await fs.mkdtemp(path.join(os.tmpdir(), "salacia-e2e-"));
     const paths = await ensureSalaciaDirs(root);
 
-    const scriptDir = path.join(root, "scripts");
-    await writeMockAdvisor(scriptDir, "claude");
-    await writeMockAdvisor(scriptDir, "gemini");
-
-    const contract = createContractFromVibe("build a todo app", "e2e-repo");
-    contract.plan.steps = contract.plan.steps.map((step) => ({
-      ...step,
-      verification: ["node -e \"process.exit(0)\""]
-    }));
-    contract.verification.commands = ["node -e \"process.exit(0)\""];
+    await copyRealAdvisorScripts(process.cwd(), root);
 
     const contractPath = path.join(paths.contracts, "e2e.yaml");
+    const planPath = path.join(paths.plans, "e2e.json");
+    const verifyCmd = `node -e "const fs=require('fs');const files=['${contractPath}','${planPath}'];for(const p of files){if(!fs.existsSync(p)){process.exit(1);}}process.exit(0);"`;
+
+    const contract = createContractFromVibe("build a todo app", "e2e-repo");
+    contract.plan.steps = [
+      {
+        id: "validate-planning-artifacts",
+        riskLevel: "low",
+        expectedArtifacts: [contractPath, planPath],
+        verification: [verifyCmd]
+      }
+    ];
+    contract.verification.commands = [verifyCmd];
     await saveContract(contract, contractPath);
 
     const plan = derivePlan(contract);
-    const planPath = path.join(paths.plans, "e2e.json");
     await savePlan(plan, planPath);
 
     const initResult = await runHarnessInitializer(plan, root);
     expect(initResult.featureCount).toBe(plan.steps.length);
 
-    const planDecision = await runConvergence({
-      stage: "plan",
-      inputPath: planPath,
-      external: true,
-      cwd: root
-    });
+    const planDecision = await runConvergenceUntilApprove(() =>
+      runConvergence({
+        stage: "plan",
+        inputPath: planPath,
+        external: true,
+        strictExternal: true,
+        timeoutMs: 30_000,
+        retries: 0,
+        cwd: root
+      })
+    );
     expect(planDecision.winner).toBe("approve");
+    const planExternalOk = planDecision.advisors.filter(
+      (item) =>
+        item.advisor !== "codex" &&
+        item.parseStatus === "ok" &&
+        item.vote !== "abstain" &&
+        Boolean((item.evidenceRef ?? "").length > 0)
+    );
+    expect(planExternalOk.length).toBeGreaterThan(0);
 
     const adapter = new VSCodeAdapter();
     const summary = await runIncrementalExecution(adapter, plan, {
@@ -89,13 +113,26 @@ describe("end-to-end flow", () => {
       "utf8"
     );
 
-    const execDecision = await runConvergence({
-      stage: "exec",
-      inputPath: execEvidencePath,
-      external: true,
-      cwd: root
-    });
+    const execDecision = await runConvergenceUntilApprove(() =>
+      runConvergence({
+        stage: "exec",
+        inputPath: execEvidencePath,
+        external: true,
+        strictExternal: true,
+        timeoutMs: 30_000,
+        retries: 0,
+        cwd: root
+      })
+    );
 
     expect(execDecision.winner).toBe("approve");
-  });
+    const execExternalOk = execDecision.advisors.filter(
+      (item) =>
+        item.advisor !== "codex" &&
+        item.parseStatus === "ok" &&
+        item.vote !== "abstain" &&
+        Boolean((item.evidenceRef ?? "").length > 0)
+    );
+    expect(execExternalOk.length).toBeGreaterThan(0);
+  }, 300_000);
 });

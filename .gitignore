@@ -10,3 +10,18 @@ coverage/
 .env.*
 *.log
 .DS_Store
+nohup.out
+*.rej
+*.rej.orig
+tmp/
+
+# vendored third-party source mirrors (large, not part of published package)
+third_party/
+
+# benchmark artifacts at repo root
+gold.*.json
+salacia__*.json
+
+# generated configs / reports
+config/
+reports/

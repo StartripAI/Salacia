@@ -43,9 +43,9 @@ node scripts/release-gate.mjs --plan <plan.json> --exec <exec.json> --require-co
 
 GitHub Actions policy:
 
-- Release Gate and Release workflows run mock advisor scripts only.
-- No external advisor API keys are injected in GitHub workflows.
-- External advisor validation remains a local/operator action, outside GitHub CI environment.
+- CI/Release workflows run real advisor CLIs (`claude`, `gemini`, `chatgpt/codex`) for convergence checks.
+- Credentials are customer-managed GitHub secrets (`ANTHROPIC_AUTH_TOKEN`, `GEMINI_API_KEY`/`GOOGLE_API_KEY`, `OPENAI_API_KEY`).
+- If no provider is ready, workflow fails instead of silently downgrading to mock advisors.
 
 Consistency safety net check:
 

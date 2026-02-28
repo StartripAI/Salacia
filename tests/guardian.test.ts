@@ -78,7 +78,8 @@ describe("guardian", () => {
 
     await manager.restoreSnapshot(snapshot.id);
     const restored = await fs.readFile(path.join(root, "file.txt"), "utf8");
-    expect(restored.replace(/\r\n/g, "\n")).toBe("base\n");
+    // restoreSnapshot restores the exact state at snapshot time (including uncommitted changes)
+    expect(restored.replace(/\r\n/g, "\n")).toBe("changed\n");
 
     await fs.writeFile(snapshot.patchPath, "tampered", "utf8");
     await expect(manager.restoreSnapshot(snapshot.id)).rejects.toThrow("Snapshot checksum mismatch: working diff");

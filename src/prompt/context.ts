@@ -42,7 +42,7 @@ export async function loadPromptContext(cwd = process.cwd()): Promise<PromptComp
     for (const line of raw.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed.startsWith("- ")) continue;
-      if (/scope|in scope|out of scope/i.test(raw)) {
+      if (/scope|in scope|out of scope/i.test(trimmed)) {
         establishedAreas.push(trimmed.slice(2));
       }
     }

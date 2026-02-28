@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salacia — The Runtime for AI Coding Agents</title>
+    <meta name="description" content="Stop wasting tokens on bad prompts. Salacia makes any AI coding agent smarter, faster, and cheaper. 93% fault localization accuracy, +6% more bugs solved.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-code: #1a1a2e;
+            --text: #e4e4ef;
+            --text-dim: #8888a0;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --green: #22c55e;
+            --green-dim: rgba(34, 197, 94, 0.12);
+            --orange: #f59e0b;
+            --pink: #ec4899;
+            --border: #1e1e2e;
+            --radius: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            padding: 80px 24px;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: var(--accent-glow);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent);
+            margin-bottom: 32px;
+            letter-spacing: 0.5px;
+        }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            letter-spacing: -0.03em;
+        }
+        .hero h1 .gradient {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--pink) 50%, var(--orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p.subtitle {
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            color: var(--text-dim);
+            max-width: 600px;
+            margin-bottom: 48px;
+        }
+        .hero-code {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 32px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            position: relative;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .hero-code:hover { border-color: var(--accent); }
+        .hero-code .prompt { color: var(--green); }
+        .hero-code .cmd { color: var(--text); }
+        .hero-code .copy {
+            color: var(--text-dim);
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .hero-code:hover .copy { opacity: 1; }
+        .hero-hint {
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        /* Stats bar */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 80px 0;
+        }
+        .stat {
+            background: var(--bg-card);
+            padding: 32px 24px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .stat-value.green { color: var(--green); }
+        .stat-value.accent { color: var(--accent); }
+        .stat-value.orange { color: var(--orange); }
+        .stat-value.pink { color: var(--pink); }
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 13px;
+            margin-top: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* How it works */
+        .section { padding: 80px 0; }
+        .section-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+        .section-subtitle {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-bottom: 48px;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .comparison-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+        }
+        .comparison-card.enhanced {
+            border-color: rgba(99, 102, 241, 0.3);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(99, 102, 241, 0.05) 100%);
+        }
+        .comparison-card h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+        .comparison-card.before h3 { color: var(--text-dim); }
+        .comparison-card.enhanced h3 { color: var(--accent); }
+        .comparison-card ul {
+            list-style: none;
+        }
+        .comparison-card li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+        }
+        .comparison-card li:last-child { border-bottom: none; }
+        .comparison-card li .icon { font-size: 18px; flex-shrink: 0; }
+
+        /* Three steps */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 48px;
+        }
+        .step {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+        }
+        .step-num {
+            width: 36px;
+            height: 36px;
+            background: var(--accent-glow);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+        .step h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .step p { color: var(--text-dim); font-size: 14px; }
+        .step code {
+            display: block;
+            background: var(--bg-code);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--green);
+        }
+
+        /* CTA */
+        .cta {
+            text-align: center;
+            padding: 100px 24px;
+        }
+        .cta h2 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 16px;
+            letter-spacing: -0.03em;
+        }
+        .cta p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5457e5;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+        }
+        .btn-secondary {
+            background: var(--bg-code);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 32px 24px;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .comparison { grid-template-columns: 1fr; }
+            .steps { grid-template-columns: 1fr; }
+            .hero-code { font-size: 0.9rem; padding: 16px 20px; }
+        }
+
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hero > * { animation: fadeUp 0.6s ease-out backwards; }
+        .hero .badge { animation-delay: 0.1s; }
+        .hero h1 { animation-delay: 0.2s; }
+        .hero .subtitle { animation-delay: 0.3s; }
+        .hero .hero-code { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+    <span class="badge">v0.1.2 · Apache 2.0 · SWE-bench Verified</span>
+    <h1><span class="gradient">Stop wasting tokens</span><br>on bad prompts.</h1>
+    <p class="subtitle">Salacia is the runtime that makes any AI coding agent smarter, faster, and cheaper.</p>
+    <div class="hero-code" onclick="navigator.clipboard.writeText('npx salacia init')">
+        <span class="prompt">$</span>
+        <span class="cmd">npx salacia init</span>
+        <span class="copy">click to copy</span>
+    </div>
+    <p class="hero-hint">Works with Claude Code, Codex, Cursor, Cline, and more.</p>
+</section>
+
+<!-- Stats -->
+<div class="container">
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-value green">+6%</div>
+            <div class="stat-label">More Bugs Solved</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value accent">93%</div>
+            <div class="stat-label">FL Accuracy</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value orange">2.2:1</div>
+            <div class="stat-label">Win : Fallback</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value pink">117</div>
+            <div class="stat-label">Tasks Tested</div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison -->
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">Your AI agent is blind without context.</h2>
+        <p class="section-subtitle">Salacia gives it eyes.</p>
+        <div class="comparison">
+            <div class="comparison-card before">
+                <h3>❌ Without Salacia</h3>
+                <ul>
+                    <li><span class="icon">🔍</span> Agent searches entire repo</li>
+                    <li><span class="icon">🔄</span> 10+ turns of trial and error</li>
+                    <li><span class="icon">💸</span> Wastes tokens on wrong files</li>
+                    <li><span class="icon">❓</span> "It compiled" = done</li>
+                </ul>
+            </div>
+            <div class="comparison-card enhanced">
+                <h3>✅ With Salacia</h3>
+                <ul>
+                    <li><span class="icon">🎯</span> Agent reads 2-3 targeted files</li>
+                    <li><span class="icon">⚡</span> 3-5 focused turns</li>
+                    <li><span class="icon">📍</span> 93% accurate fault localization</li>
+                    <li><span class="icon">✔️</span> Contract-verified correctness</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How it works -->
+<section class="section">
+    <div class="container">
+        <h2 class="section-title">Three commands. That's it.</h2>
+        <p class="section-subtitle">From vibe to verified fix in under a minute.</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <h3>Plan</h3>
+                <p>Parse your intent into a contract with fault-localized context.</p>
+                <code>salacia plan "fix the auth bug"</code>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <h3>Execute</h3>
+                <p>Dispatch to your agent with targeted files and test guidance.</p>
+                <code>salacia execute --adapter claude-code</code>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <h3>Validate</h3>
+                <p>Verify against the contract. Not "it compiled" — it's correct.</p>
+                <code>salacia validate</code>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>Your code runs on Node.<br>Your AI agent runs on <span style="color: var(--accent)">Salacia</span>.</h2>
+    <p>One command to start. Apache 2.0 licensed. Works with any agent.</p>
+    <div class="cta-buttons">
+        <a href="https://github.com/StartripAI/Salacia" class="btn btn-primary">⭐ GitHub</a>
+        <a href="https://www.npmjs.com/package/salacia" class="btn btn-secondary">📦 npm</a>
+    </div>
+</section>
+
+<footer>
+    <p>Made by <a href="https://github.com/StartripAI">StartripAI</a> · <a href="https://github.com/StartripAI/Salacia">Source</a> · Apache-2.0</p>
+</footer>
+
+</body>
+</html>

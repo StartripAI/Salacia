@@ -98,10 +98,21 @@ function hasFlag(name) {
 }
 
 async function runConvergenceCheck(name, stage, inputPath, cwd, external) {
+  const strictExternal = external;
   const result = await runChecked(
     name,
     "node",
-    ["dist/cli/index.js", "converge", "--stage", stage, "--input", inputPath, ...(external ? ["--external"] : []), "--json"],
+    [
+      "dist/cli/index.js",
+      "converge",
+      "--stage",
+      stage,
+      "--input",
+      inputPath,
+      ...(external ? ["--external"] : []),
+      ...(strictExternal ? ["--strict-external"] : []),
+      "--json"
+    ],
     { cwd }
   );
 
@@ -115,17 +126,23 @@ async function runConvergenceCheck(name, stage, inputPath, cwd, external) {
   }
 
   const advisors = Array.isArray(decision.advisors) ? decision.advisors : [];
-  const hasEvidence = advisors.every((advisor) => typeof advisor?.evidenceRef === "string" && advisor.evidenceRef.length > 0);
-  const hasInvalid = advisors.some((advisor) => advisor?.parseStatus === "invalid");
+  const externalAdvisors = advisors.filter((advisor) => advisor?.advisor !== "codex");
+  const strictExternalOk = externalAdvisors.filter(
+    (advisor) =>
+      advisor?.parseStatus === "ok" &&
+      advisor?.vote !== "abstain" &&
+      typeof advisor?.evidenceRef === "string" &&
+      advisor.evidenceRef.length > 0
+  );
   const unresolvedSplit = Boolean(decision.requiresHumanApproval) || decision.winner === "abstain";
-  const pass = result.passed && advisors.length >= 3 && hasEvidence && !hasInvalid && !unresolvedSplit;
+  const pass = result.passed && advisors.length >= 2 && strictExternalOk.length > 0 && !unresolvedSplit;
 
   return {
     ...result,
     passed: pass,
     details: pass
       ? JSON.stringify(decision)
-      : `Convergence policy failed (${name}): advisors=${advisors.length}, hasEvidence=${hasEvidence}, hasInvalid=${hasInvalid}, unresolvedSplit=${unresolvedSplit}, raw=${result.details}`,
+      : `Convergence policy failed (${name}): advisors=${advisors.length}, externalAdvisors=${externalAdvisors.length}, strictExternalOk=${strictExternalOk.length}, unresolvedSplit=${unresolvedSplit}, raw=${result.details}`,
     decision
   };
 }

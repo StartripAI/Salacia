@@ -4,6 +4,10 @@ import path from "node:path";
 import { stdin as input, stdout as output } from "node:process";
 import { createInterface } from "node:readline/promises";
 import { Command } from "commander";
+import { runBenchmark, loadBenchmarkReportByRunId, loadLatestBenchmarkReport } from "../benchmark/runner.js";
+import { compareBenchmarkRun, decideSota } from "../benchmark/compare.js";
+import { verifyRunAttestation } from "../benchmark/verify.js";
+import { runCompetitorBenchmark } from "../benchmark/competitor.js";
 import { runSuperiorityAudit } from "../audit/superiority.js";
 import {
   createContractFromIntentIR,
@@ -12,11 +16,12 @@ import {
   validateContract
 } from "../core/contract.js";
 import { runConvergence } from "../core/converge.js";
+import { cleanWorkspace } from "../core/clean.js";
 import { initRepository } from "../core/init.js";
 import { ensureSalaciaDirs, latestFileInDir } from "../core/paths.js";
 import { derivePlanFromIntent, loadPlan, savePlan } from "../core/plan.js";
 import { generateSpecMarkdown, saveSpec } from "../core/spec.js";
-import type { DisambiguationQuestion, IntentIR, Stage } from "../core/types.js";
+import type { BenchmarkSuite, DisambiguationQuestion, IntentIR, Stage } from "../core/types.js";
 import { findAdapter, adapterMatrix } from "../adapters/registry.js";
 import { evaluateConsistency } from "../guardian/consistency.js";
 import { SnapshotManager } from "../guardian/snapshot.js";
@@ -32,7 +37,7 @@ import { optimizePrompts } from "../prompt/optimize.js";
 import { buildSalaciaMcpServerDescription, runSalaciaMcpServer } from "../protocols/mcp-server.js";
 
 const program = new Command();
-program.name("salacia").description("Salacia v0.1.2 - repo-first Agentic Engineering OS").version("0.1.2");
+program.name("salacia").description("salacia v0.1.2 - repo-first Agentic Engineering OS").version("0.1.2");
 
 function emit(data: unknown, asJson: boolean): void {
   if (asJson) {
@@ -114,6 +119,120 @@ async function askSingleQuestion(question: DisambiguationQuestion): Promise<stri
   }
 }
 
+function parseIntOption(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return parsed;
+}
+
+function parseFloatOption(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return parsed;
+}
+
+function parseExecuteMode(value: string | undefined): "auto" | "cli" {
+  const normalized = (value ?? "auto").trim().toLowerCase();
+  if (normalized === "auto" || normalized === "cli") {
+    return normalized;
+  }
+  throw new Error("Unknown execute mode. Use auto|cli.");
+}
+
+async function runPlanCommand(vibe: string, opts: { explain: boolean; json: boolean }): Promise<void> {
+  const cwd = process.cwd();
+  const paths = await ensureSalaciaDirs(cwd);
+  const compiled = await compilePromptInput(vibe, { cwd });
+  let intent = compiled.ir;
+
+  if (compiled.question) {
+    const answer = await askSingleQuestion(compiled.question);
+    if (!answer) {
+      emit(
+        {
+          ok: false,
+          code: "disambiguation-required",
+          question: compiled.question,
+          diagnostics: compiled.diagnostics
+        },
+        true
+      );
+      process.exit(2);
+    }
+
+    intent = applyDisambiguationAnswer(intent, compiled.question, answer);
+    const secondPass = runMetamorphicTests(compiled.baseline, intent);
+    if (!secondPass.passed) {
+      emit(
+        {
+          ok: false,
+          code: "metamorphic-failed-after-disambiguation",
+          checks: secondPass.checks
+        },
+        true
+      );
+      process.exit(1);
+    }
+  }
+
+  if (!compiled.metamorphic.passed) {
+    emit(
+      {
+        ok: false,
+        code: "metamorphic-failed",
+        diagnostics: compiled.diagnostics,
+        checks: compiled.metamorphic.checks
+      },
+      true
+    );
+    process.exit(1);
+  }
+
+  const contract = createContractFromIntentIR(intent);
+  const valid = validateContract(contract);
+  if (!valid.valid) {
+    emit({ ok: false, errors: valid.errors }, true);
+    process.exit(1);
+  }
+
+  const ts = Date.now();
+  const contractPath = path.join(paths.contracts, `${ts}.yaml`);
+  await saveContract(contract, contractPath);
+
+  const plan = derivePlanFromIntent(contract, intent);
+  const planPath = path.join(paths.plans, `${ts}.json`);
+  await savePlan(plan, planPath);
+
+  const spec = generateSpecMarkdown(contract, plan);
+  const specPath = path.join(paths.specs, `${ts}.md`);
+  await saveSpec(spec, specPath);
+
+  const intentPath = await persistIntentIR(intent, cwd);
+  const harnessInit = await runHarnessInitializer(plan, process.cwd());
+
+  emit(
+    {
+      ok: true,
+      intentPath,
+      contractPath,
+      specPath,
+      planPath,
+      progressPath: harnessInit.progressFile,
+      featureCount: harnessInit.featureCount,
+      ...(opts.explain
+        ? {
+            diagnostics: compiled.diagnostics,
+            corrected: compiled.corrected,
+            context: compiled.context
+          }
+        : {})
+    },
+    opts.json
+  );
+}
+
 program
   .command("init")
   .description("Initialize .salacia runtime in current repository")
@@ -130,95 +249,17 @@ program
   .option("--explain", "emit diagnostics and correction evidence", false)
   .option("--json", "json output", false)
   .action(async (vibe: string, opts: { explain: boolean; json: boolean }) => {
-    const cwd = process.cwd();
-    const paths = await ensureSalaciaDirs(cwd);
-    const compiled = await compilePromptInput(vibe, { cwd });
-    let intent = compiled.ir;
+    await runPlanCommand(vibe, opts);
+  });
 
-    if (compiled.question) {
-      const answer = await askSingleQuestion(compiled.question);
-      if (!answer) {
-        emit(
-          {
-            ok: false,
-            code: "disambiguation-required",
-            question: compiled.question,
-            diagnostics: compiled.diagnostics
-          },
-          true
-        );
-        process.exit(2);
-      }
-
-      intent = applyDisambiguationAnswer(intent, compiled.question, answer);
-      const secondPass = runMetamorphicTests(compiled.baseline, intent);
-      if (!secondPass.passed) {
-        emit(
-          {
-            ok: false,
-            code: "metamorphic-failed-after-disambiguation",
-            checks: secondPass.checks
-          },
-          true
-        );
-        process.exit(1);
-      }
-    }
-
-    if (!compiled.metamorphic.passed) {
-      emit(
-        {
-          ok: false,
-          code: "metamorphic-failed",
-          diagnostics: compiled.diagnostics,
-          checks: compiled.metamorphic.checks
-        },
-        true
-      );
-      process.exit(1);
-    }
-
-    const contract = createContractFromIntentIR(intent);
-    const valid = validateContract(contract);
-    if (!valid.valid) {
-      emit({ ok: false, errors: valid.errors }, true);
-      process.exit(1);
-    }
-
-    const ts = Date.now();
-    const contractPath = path.join(paths.contracts, `${ts}.yaml`);
-    await saveContract(contract, contractPath);
-
-    const plan = derivePlanFromIntent(contract, intent);
-    const planPath = path.join(paths.plans, `${ts}.json`);
-    await savePlan(plan, planPath);
-
-    const spec = generateSpecMarkdown(contract, plan);
-    const specPath = path.join(paths.specs, `${ts}.md`);
-    await saveSpec(spec, specPath);
-
-    const intentPath = await persistIntentIR(intent, cwd);
-    const harnessInit = await runHarnessInitializer(plan, process.cwd());
-
-    emit(
-      {
-        ok: true,
-        intentPath,
-        contractPath,
-        specPath,
-        planPath,
-        progressPath: harnessInit.progressFile,
-        featureCount: harnessInit.featureCount,
-        ...(opts.explain
-          ? {
-              diagnostics: compiled.diagnostics,
-              corrected: compiled.corrected,
-              context: compiled.context
-            }
-          : {})
-      },
-      opts.json
-    );
+program
+  .command("forge")
+  .description("Alias of plan")
+  .argument("<vibe>")
+  .option("--explain", "emit diagnostics and correction evidence", false)
+  .option("--json", "json output", false)
+  .action(async (vibe: string, opts: { explain: boolean; json: boolean }) => {
+    await runPlanCommand(vibe, opts);
   });
 
 program
@@ -332,14 +373,16 @@ program
   .description("Run advisor convergence for plan or execution artifacts")
   .requiredOption("--stage <stage>", "plan or exec")
   .requiredOption("--input <path>", "input file path")
-  .option("--external", "run Claude/Gemini external scripts", false)
+  .option("--external", "run external advisor scripts (Claude/Gemini/ChatGPT)", false)
+  .option("--strict-external", "require strict external advisor contract (parseStatus=ok, non-abstain, evidenceRef)", false)
   .option("--json", "json output", false)
   .action(
-    async (opts: { stage: Stage; input: string; external: boolean; json: boolean }) => {
+    async (opts: { stage: Stage; input: string; external: boolean; strictExternal: boolean; json: boolean }) => {
       const decision = await runConvergence({
         stage: opts.stage,
         inputPath: path.resolve(opts.input),
         external: opts.external,
+        strictExternal: opts.strictExternal,
         cwd: process.cwd()
       });
 
@@ -367,6 +410,23 @@ program
     const payload = { ok: verification.success && drift.protectedPathTouches.length === 0, drift, verification };
     emit(payload, opts.json || true);
     if (!payload.ok) process.exit(1);
+  });
+
+program
+  .command("verify")
+  .description("Run verification commands for latest contract")
+  .option("--json", "json output", false)
+  .action(async (opts: { json: boolean }) => {
+    const { contractPath } = await latestArtifacts(process.cwd());
+    if (!contractPath) {
+      emit({ ok: false, error: "No contract found. Run salacia plan first." }, true);
+      process.exit(1);
+    }
+
+    const contract = await loadContract(contractPath);
+    const verification = await runVerification(contract, process.cwd());
+    emit({ ok: verification.success, verification }, opts.json || true);
+    if (!verification.success) process.exit(1);
   });
 
 program
@@ -400,15 +460,29 @@ program
   .description("Dispatch latest plan to a target adapter with convergence stage gates")
   .requiredOption("--adapter <name>", "adapter name")
   .option("--dry-run", "do not run mutating tools", false)
-  .option("--mode <mode>", "adapter mode (auto|cli|sdk)", "auto")
+  .option("--mode <mode>", "adapter mode (auto|cli)", "auto")
+  .option("--agent-topology <topology>", "single|multi", "single")
+  .option("--agent-roles <roles>", "comma-separated side-agent roles", "reviewer,verifier")
+  .option("--worktree-fanout <n>", "max role fanout", "2")
+  .option("--coordination-protocol <protocol>", "none|mcp|acp-a2a|acp-opencode|acp-mesh", "none")
+  .option("--no-auto-rollback", "disable automatic rollback", true)
+  .option("--rollback-retries <n>", "rollback retry count", "1")
   .option("--external", "run external advisors in convergence", false)
+  .option("--strict-external", "require strict external advisor contract for pre/post convergence", false)
   .option("--json", "json output", false)
   .action(
     async (opts: {
       adapter: string;
       dryRun: boolean;
-      mode: "auto" | "cli" | "sdk";
+      mode: string;
+      agentTopology: "single" | "multi";
+      agentRoles: string;
+      worktreeFanout: string;
+      coordinationProtocol: string;
+      autoRollback: boolean;
+      rollbackRetries: string;
       external: boolean;
+      strictExternal: boolean;
       json: boolean;
     }) => {
       const cwd = process.cwd();
@@ -425,10 +499,19 @@ program
         process.exit(1);
       }
 
+      let mode: "auto" | "cli";
+      try {
+        mode = parseExecuteMode(opts.mode);
+      } catch (error) {
+        emit({ ok: false, error: (error as Error).message }, true);
+        process.exit(1);
+      }
+
       const preDecision = await runConvergence({
         stage: "plan",
         inputPath: planPath,
         external: opts.external,
+        strictExternal: opts.strictExternal,
         cwd
       });
       if (preDecision.winner !== "approve") {
@@ -442,7 +525,7 @@ program
         cwd,
         dryRun: opts.dryRun,
         stage: "exec",
-        mode: opts.mode,
+        mode,
         externalAdvisors: opts.external
       }, contract);
 
@@ -473,6 +556,7 @@ program
         stage: "exec",
         inputPath: execEvidencePath,
         external: opts.external,
+        strictExternal: opts.strictExternal,
         cwd
       });
 
@@ -480,6 +564,11 @@ program
       const payload = {
         ok,
         adapter: adapter.name,
+        topology: opts.agentTopology,
+        coordinationProtocol: opts.coordinationProtocol,
+        autoRollback: opts.autoRollback,
+        strictExternal: opts.strictExternal,
+        rollbackRetries: parseIntOption(opts.rollbackRetries, 1),
         convergence: {
           plan: preDecision,
           exec: postDecision
@@ -559,6 +648,27 @@ program
   });
 
 program
+  .command("clean")
+  .description("Clean generated workspace artifacts")
+  .option("--mode <mode>", "safe|bench|full", "safe")
+  .option("--dry-run", "show what would be deleted", false)
+  .option("--keep <n>", "entries to keep when rotating", "5")
+  .option("--json", "json output", false)
+  .action(async (opts: { mode: "safe" | "bench" | "full"; dryRun: boolean; keep: string; json: boolean }) => {
+    if (!["safe", "bench", "full"].includes(opts.mode)) {
+      emit({ ok: false, error: "Unknown clean mode. Use safe|bench|full." }, true);
+      process.exit(1);
+    }
+
+    const report = await cleanWorkspace(process.cwd(), {
+      mode: opts.mode,
+      dryRun: opts.dryRun,
+      keep: parseIntOption(opts.keep, 5)
+    });
+    emit({ ok: true, report }, opts.json || true);
+  });
+
+program
   .command("adapters")
   .description("List/check/matrix adapter availability")
   .argument("<action>", "list|check|matrix")
@@ -620,6 +730,155 @@ program
     emit({ ok: report.strongerThanBaseline, report }, opts.json || true);
     if (!report.strongerThanBaseline) process.exit(1);
   });
+
+program
+  .command("benchmark")
+  .description("Run benchmark, compare, verify, and public benchmark actions")
+  .argument("<action>", "run|compare|verify|report|sota-check|measure|public-run|public-audit|public-campaign")
+  .option("--run <runId>", "benchmark run id")
+  .option("--suite <suite>", "core|scale|full", "full")
+  .option("--repeats <n>", "repeats per probe", "1")
+  .option("--sample <n>", "sample size")
+  .option("--concurrency <n>", "parallel workers")
+  .option("--resume", "resume previous campaign", false)
+  .option("--strict", "enable strict policy checks", false)
+  .option("--no-scaffold", "skip benchmark scaffold generation", false)
+  .option("--public-model-chain <chain>", "public model chain")
+  .option("--public-strict-min-model-attempted-rate <rate>", "strict minimum model-attempted rate", "0.5")
+  .option("--json", "json output", false)
+  .action(
+    async (
+      action: string,
+      opts: {
+        run?: string;
+        suite: BenchmarkSuite;
+        repeats: string;
+        sample?: string;
+        concurrency?: string;
+        resume: boolean;
+        strict: boolean;
+        scaffold: boolean;
+        publicModelChain?: string;
+        publicStrictMinModelAttemptedRate: string;
+        json: boolean;
+      }
+    ) => {
+      const cwd = process.cwd();
+      const loadReport = async () => {
+        if (opts.run) {
+          return loadBenchmarkReportByRunId(cwd, opts.run);
+        }
+        return loadLatestBenchmarkReport(cwd);
+      };
+
+      if (action === "run") {
+        const suite = opts.suite;
+        if (!["core", "scale", "full"].includes(suite)) {
+          emit({ ok: false, error: "Invalid suite. Use core|scale|full." }, true);
+          process.exit(1);
+        }
+        const report = await runBenchmark({
+          cwd,
+          suite,
+          repeats: parseIntOption(opts.repeats, 1)
+        });
+        emit(
+          {
+            ok: true,
+            runId: report.metadata.runId,
+            reportPath: report.reportPath,
+            probeCount: report.probeCount
+          },
+          opts.json || true
+        );
+        return;
+      }
+
+      if (action === "compare") {
+        const report = await loadReport();
+        if (!report) {
+          emit({ ok: false, error: "No benchmark report found. Run `salacia benchmark run` first." }, true);
+          process.exit(1);
+        }
+        const comparisons = await compareBenchmarkRun(report, { cwd });
+        emit({ ok: true, runId: report.metadata.runId, comparisons }, opts.json || true);
+        return;
+      }
+
+      if (action === "verify") {
+        if (!opts.run) {
+          emit({ ok: false, error: "benchmark verify requires --run <runId>" }, true);
+          process.exit(1);
+        }
+        const runDir = path.join(cwd, ".salacia", "journal", "bench", "runs", opts.run);
+        const verification = await verifyRunAttestation(runDir, {
+          keyDir: path.join(cwd, ".salacia", "journal", "bench", "keys")
+        });
+        emit({ ok: verification.ok, verification }, opts.json || true);
+        if (!verification.ok) process.exit(1);
+        return;
+      }
+
+      if (action === "report") {
+        const report = await loadReport();
+        if (!report) {
+          emit({ ok: false, error: "No benchmark report found. Run `salacia benchmark run` first." }, true);
+          process.exit(1);
+        }
+        emit({ ok: true, report }, opts.json || true);
+        return;
+      }
+
+      if (action === "sota-check") {
+        const report = await loadReport();
+        if (!report) {
+          emit({ ok: false, error: "No benchmark report found. Run `salacia benchmark run` first." }, true);
+          process.exit(1);
+        }
+        const comparisons = await compareBenchmarkRun(report, { cwd });
+        const decision = decideSota(report, comparisons, { requireMeasured: opts.strict });
+        emit({ ok: decision.passed, decision }, opts.json || true);
+        if (!decision.passed) process.exit(1);
+        return;
+      }
+
+      if (action === "measure") {
+        const report = await runCompetitorBenchmark({
+          cwd
+        });
+        emit(
+          {
+            ok: true,
+            runId: report.runId,
+            reportPath: report.reportPath,
+            results: report.results.length
+          },
+          opts.json || true
+        );
+        return;
+      }
+
+      if (action === "public-run" || action === "public-audit" || action === "public-campaign") {
+        emit(
+          {
+            ok: false,
+            error: `${action} is not wired in CLI yet. Use scripts/public-benchmark-*.mjs directly.`
+          },
+          true
+        );
+        process.exit(1);
+      }
+
+      emit(
+        {
+          ok: false,
+          error: "Unknown benchmark action. Use run|compare|verify|report|sota-check|measure|public-run|public-audit|public-campaign."
+        },
+        true
+      );
+      process.exit(1);
+    }
+  );
 
 program
   .command("mcp-server")

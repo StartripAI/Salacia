@@ -1,0 +1,374 @@
+{
+  "id": "salacia-competitor-set-v1",
+  "version": "1.0.0",
+  "generatedAt": "2026-02-22T00:00:00.000Z",
+  "competitors": [
+    {
+      "id": "trellis",
+      "name": "Trellis",
+      "kind": "open-source",
+      "license": "AGPL-3.0-only",
+      "source": "public capability baseline, clean-room mapped",
+      "sampledAt": "2026-02-23",
+      "provenance": "profiled",
+      "evidenceRefs": [
+        "docs/benchmarks/TRELLIS_CAPABILITY_SPEC.v1.md",
+        "docs/benchmarks/TRELLIS_CLEANROOM_TRACE.v1.md",
+        ".salacia/journal/bench/competitor-runs/1771805032479-gc5mtx/report.json",
+        ".salacia/journal/bench/competitor-runs/1771805032479-gc5mtx/trellis/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771805032479-gc5mtx/trellis/stderr.log"
+      ],
+      "dimensions": {
+        "prompt_quality": null,
+        "contract_integrity": null,
+        "convergence_robustness": null,
+        "execution_governance": null,
+        "ide_native_depth": null,
+        "protocol_behavior": null,
+        "scale_stability": null,
+        "compliance_audit": null,
+        "anti_gaming": null
+      },
+      "dimensionProvenance": {
+        "prompt_quality": "unavailable",
+        "contract_integrity": "unavailable",
+        "convergence_robustness": "unavailable",
+        "execution_governance": "unavailable",
+        "ide_native_depth": "unavailable",
+        "protocol_behavior": "unavailable",
+        "scale_stability": "unavailable",
+        "compliance_audit": "unavailable",
+        "anti_gaming": "unavailable"
+      },
+      "strictMode": {
+        "status": "exempt",
+        "reason": "AGPL-3.0 license and no stable headless benchmark automation entrypoint for the mirrored harness path"
+      }
+    },
+    {
+      "id": "aider",
+      "name": "Aider",
+      "kind": "open-source",
+      "license": "Apache-2.0",
+      "source": "https://github.com/Aider-AI/aider",
+      "sampledAt": "2026-02-22",
+      "provenance": "measured",
+      "evidenceRefs": [
+        "third_party/MANIFEST.json",
+        "third_party/apache/aider/.source.json",
+        ".salacia/journal/bench/competitor-runs/1771756055656-g5anng/report.json",
+        ".salacia/journal/bench/competitor-runs/1771756055656-g5anng/aider/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771756055656-g5anng/aider/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771756606315-yheasr/report.json",
+        ".salacia/journal/bench/competitor-runs/1771756606315-yheasr/aider/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771756606315-yheasr/aider/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771757012498-2v2g63/report.json",
+        ".salacia/journal/bench/competitor-runs/1771757012498-2v2g63/aider/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771757012498-2v2g63/aider/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771757819634-laouz9/report.json",
+        ".salacia/journal/bench/competitor-runs/1771757819634-laouz9/aider/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771757819634-laouz9/aider/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771763157182-nsavwg/report.json",
+        ".salacia/journal/bench/competitor-runs/1771763157182-nsavwg/aider/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771763157182-nsavwg/aider/stderr.log"
+      ],
+      "dimensions": {
+        "prompt_quality": 8.39,
+        "contract_integrity": 7.79,
+        "convergence_robustness": 6,
+        "execution_governance": 7.65,
+        "ide_native_depth": 5.5,
+        "protocol_behavior": 5.9,
+        "scale_stability": 7.1,
+        "compliance_audit": 6.8,
+        "anti_gaming": 5.7
+      },
+      "dimensionProvenance": {
+        "prompt_quality": "measured",
+        "contract_integrity": "measured",
+        "convergence_robustness": "profiled",
+        "execution_governance": "measured",
+        "ide_native_depth": "profiled",
+        "protocol_behavior": "profiled",
+        "scale_stability": "profiled",
+        "compliance_audit": "profiled",
+        "anti_gaming": "profiled"
+      },
+      "strictMode": {
+        "status": "required"
+      }
+    },
+    {
+      "id": "cline",
+      "name": "Cline",
+      "kind": "open-source",
+      "license": "Apache-2.0",
+      "source": "https://github.com/cline/cline",
+      "sampledAt": "2026-02-23",
+      "provenance": "profiled",
+      "evidenceRefs": [
+        "third_party/MANIFEST.json",
+        "third_party/apache/cline/.source.json",
+        ".salacia/journal/bench/competitor-runs/1771805015199-8fac2s/report.json",
+        ".salacia/journal/bench/competitor-runs/1771805015199-8fac2s/cline/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771805015199-8fac2s/cline/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771807634352-8uu5gt/report.json",
+        ".salacia/journal/bench/competitor-runs/1771807634352-8uu5gt/cline/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771807634352-8uu5gt/cline/stderr.log"
+      ],
+      "dimensions": {
+        "prompt_quality": 7.2,
+        "contract_integrity": 6.1,
+        "convergence_robustness": 6.6,
+        "execution_governance": null,
+        "ide_native_depth": 7.8,
+        "protocol_behavior": 6.5,
+        "scale_stability": 6.8,
+        "compliance_audit": 6.7,
+        "anti_gaming": 5.9
+      },
+      "dimensionProvenance": {
+        "prompt_quality": "profiled",
+        "contract_integrity": "profiled",
+        "convergence_robustness": "profiled",
+        "execution_governance": "unavailable",
+        "ide_native_depth": "profiled",
+        "protocol_behavior": "profiled",
+        "scale_stability": "profiled",
+        "compliance_audit": "profiled",
+        "anti_gaming": "profiled"
+      },
+      "strictMode": {
+        "status": "exempt",
+        "reason": "VS Code extension-first tool without documented non-interactive headless CLI benchmark mode"
+      }
+    },
+    {
+      "id": "continue",
+      "name": "Continue",
+      "kind": "open-source",
+      "license": "Apache-2.0",
+      "source": "https://github.com/continuedev/continue",
+      "sampledAt": "2026-02-22",
+      "provenance": "measured",
+      "evidenceRefs": [
+        "third_party/MANIFEST.json",
+        "third_party/apache/continue/.source.json",
+        ".salacia/journal/bench/competitor-runs/1771763471421-26ry4w/report.json",
+        ".salacia/journal/bench/competitor-runs/1771763471421-26ry4w/continue/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771763471421-26ry4w/continue/stderr.log"
+      ],
+      "dimensions": {
+        "prompt_quality": 9.8,
+        "contract_integrity": 9.9,
+        "convergence_robustness": 6.5,
+        "execution_governance": 9.8,
+        "ide_native_depth": 7,
+        "protocol_behavior": 6.7,
+        "scale_stability": 6.9,
+        "compliance_audit": 7.1,
+        "anti_gaming": 6
+      },
+      "dimensionProvenance": {
+        "prompt_quality": "measured",
+        "contract_integrity": "measured",
+        "convergence_robustness": "profiled",
+        "execution_governance": "measured",
+        "ide_native_depth": "profiled",
+        "protocol_behavior": "profiled",
+        "scale_stability": "profiled",
+        "compliance_audit": "profiled",
+        "anti_gaming": "profiled"
+      },
+      "strictMode": {
+        "status": "required"
+      }
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "kind": "open-source",
+      "license": "MIT",
+      "source": "https://github.com/anomalyco/opencode",
+      "sampledAt": "2026-02-23",
+      "provenance": "profiled",
+      "evidenceRefs": [
+        "docs/benchmarks/COMPETITOR_MATRIX.v1.md",
+        ".salacia/journal/bench/competitor-runs/1771806343375-joxzs0/report.json",
+        ".salacia/journal/bench/competitor-runs/1771806343375-joxzs0/opencode/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771806343375-joxzs0/opencode/stderr.log"
+      ],
+      "dimensions": {
+        "prompt_quality": 7.3,
+        "contract_integrity": 6,
+        "convergence_robustness": 6.2,
+        "execution_governance": null,
+        "ide_native_depth": 6.9,
+        "protocol_behavior": 7.3,
+        "scale_stability": 7.2,
+        "compliance_audit": 6.3,
+        "anti_gaming": 5.8
+      },
+      "dimensionProvenance": {
+        "prompt_quality": "profiled",
+        "contract_integrity": "profiled",
+        "convergence_robustness": "profiled",
+        "execution_governance": "unavailable",
+        "ide_native_depth": "profiled",
+        "protocol_behavior": "profiled",
+        "scale_stability": "profiled",
+        "compliance_audit": "profiled",
+        "anti_gaming": "profiled"
+      },
+      "strictMode": {
+        "status": "exempt",
+        "reason": "Current seed-task runs are environment/bridge failures rather than validated capability measurements"
+      }
+    },
+    {
+      "id": "claude-code",
+      "name": "Claude Code",
+      "kind": "open-source",
+      "license": "Apache-2.0",
+      "source": "https://github.com/anthropics/claude-code",
+      "sampledAt": "2026-02-23",
+      "provenance": "measured",
+      "evidenceRefs": [
+        "docs/benchmarks/COMPETITOR_MATRIX.v1.md",
+        ".salacia/journal/bench/competitor-runs/1771755329118-5kcea4/report.json",
+        ".salacia/journal/bench/competitor-runs/1771755329118-5kcea4/claude/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771755329118-5kcea4/claude/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771756713946-tf2sdc/report.json",
+        ".salacia/journal/bench/competitor-runs/1771756713946-tf2sdc/claude/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771756713946-tf2sdc/claude/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771757819634-laouz9/report.json",
+        ".salacia/journal/bench/competitor-runs/1771757819634-laouz9/claude/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771757819634-laouz9/claude/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771763157182-nsavwg/report.json",
+        ".salacia/journal/bench/competitor-runs/1771763157182-nsavwg/claude/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771763157182-nsavwg/claude/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771807352468-nzusjh/report.json",
+        ".salacia/journal/bench/competitor-runs/1771807352468-nzusjh/claude/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771807352468-nzusjh/claude/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771844907457-a9wa40/report.json",
+        ".salacia/journal/bench/competitor-runs/1771844907457-a9wa40/claude/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771844907457-a9wa40/claude/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771846766544-5vznbz/report.json",
+        ".salacia/journal/bench/competitor-runs/1771846766544-5vznbz/claude/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771846766544-5vznbz/claude/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771848316729-jxf8me/report.json",
+        ".salacia/journal/bench/competitor-runs/1771848316729-jxf8me/claude/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771848316729-jxf8me/claude/stderr.log"
+      ],
+      "dimensions": {
+        "prompt_quality": 9.64,
+        "contract_integrity": 9.74,
+        "convergence_robustness": 6.3,
+        "execution_governance": 9.45,
+        "ide_native_depth": 5.9,
+        "protocol_behavior": 6.8,
+        "scale_stability": 7.4,
+        "compliance_audit": 6.9,
+        "anti_gaming": 5.9
+      },
+      "dimensionProvenance": {
+        "prompt_quality": "measured",
+        "contract_integrity": "measured",
+        "convergence_robustness": "profiled",
+        "execution_governance": "measured",
+        "ide_native_depth": "profiled",
+        "protocol_behavior": "profiled",
+        "scale_stability": "profiled",
+        "compliance_audit": "profiled",
+        "anti_gaming": "profiled"
+      },
+      "strictMode": {
+        "status": "required"
+      }
+    },
+    {
+      "id": "codex",
+      "name": "OpenAI Codex CLI",
+      "kind": "open-source",
+      "license": "unknown",
+      "source": "https://github.com/openai/codex",
+      "sampledAt": "2026-02-22",
+      "provenance": "measured",
+      "evidenceRefs": [
+        "docs/benchmarks/COMPETITOR_MATRIX.v1.md",
+        ".salacia/journal/bench/competitor-runs/1771757819634-laouz9/report.json",
+        ".salacia/journal/bench/competitor-runs/1771757819634-laouz9/codex/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771757819634-laouz9/codex/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771758327786-sogaj6/report.json",
+        ".salacia/journal/bench/competitor-runs/1771758327786-sogaj6/codex/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771758327786-sogaj6/codex/stderr.log",
+        ".salacia/journal/bench/competitor-runs/1771763157182-nsavwg/report.json",
+        ".salacia/journal/bench/competitor-runs/1771763157182-nsavwg/codex/stdout.log",
+        ".salacia/journal/bench/competitor-runs/1771763157182-nsavwg/codex/stderr.log"
+      ],
+      "dimensions": {
+        "prompt_quality": 9.53,
+        "contract_integrity": 9.63,
+        "convergence_robustness": 6.2,
+        "execution_governance": 9.19,
+        "ide_native_depth": 5.7,
+        "protocol_behavior": 6.7,
+        "scale_stability": 7.1,
+        "compliance_audit": 6.4,
+        "anti_gaming": 5.8
+      },
+      "dimensionProvenance": {
+        "prompt_quality": "measured",
+        "contract_integrity": "measured",
+        "convergence_robustness": "profiled",
+        "execution_governance": "measured",
+        "ide_native_depth": "profiled",
+        "protocol_behavior": "profiled",
+        "scale_stability": "profiled",
+        "compliance_audit": "profiled",
+        "anti_gaming": "profiled"
+      },
+      "strictMode": {
+        "status": "required"
+      }
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor",
+      "kind": "closed-source",
+      "license": "proprietary",
+      "source": "public black-box behavior comparison",
+      "sampledAt": "2026-02-22",
+      "provenance": "profiled",
+      "evidenceRefs": [
+        "docs/benchmarks/COMPETITOR_MATRIX.v1.md"
+      ],
+      "dimensions": {
+        "prompt_quality": 7.5,
+        "contract_integrity": 5.8,
+        "convergence_robustness": 5.9,
+        "execution_governance": 6.2,
+        "ide_native_depth": 8.2,
+        "protocol_behavior": 5.8,
+        "scale_stability": 6.9,
+        "compliance_audit": 5.5,
+        "anti_gaming": 5.2
+      },
+      "dimensionProvenance": {
+        "prompt_quality": "profiled",
+        "contract_integrity": "profiled",
+        "convergence_robustness": "profiled",
+        "execution_governance": "profiled",
+        "ide_native_depth": "profiled",
+        "protocol_behavior": "profiled",
+        "scale_stability": "profiled",
+        "compliance_audit": "profiled",
+        "anti_gaming": "profiled"
+      },
+      "strictMode": {
+        "status": "exempt",
+        "reason": "closed-source IDE has no official headless automation entrypoint"
+      }
+    }
+  ]
+}

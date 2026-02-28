@@ -34,8 +34,15 @@ async function changedFiles(cwd: string): Promise<string[]> {
 
 function matchesPrefix(file: string, rules: string[]): boolean {
   return rules.some((rule) => {
-    const normalized = rule.replace("/**", "").replace("*", "");
-    return normalized ? file.startsWith(normalized) : false;
+    // Strip trailing glob suffix to get the directory prefix
+    const normalized = rule
+      .replace(/\/\*\*.*$/, "")
+      .replace(/\/\*$/, "")
+      .replace(/\*$/, "")
+      .replace(/\/+$/, "");
+    if (!normalized) return false;
+    // Require exact segment boundary: prefix must be followed by "/" or be exact match
+    return file === normalized || file.startsWith(normalized + "/");
   });
 }
 

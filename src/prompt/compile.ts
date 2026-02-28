@@ -8,6 +8,7 @@ import type {
 import { selectDisambiguationQuestion } from "./disambiguate.js";
 import { loadPromptContext, type PromptCompileContext } from "./context.js";
 import { buildRisk, createIntentId, normalizeList, validateIntentIR } from "./ir.js";
+import { sublimateWithUserLlm, type IntentSublimationPatch } from "./llm-sublimator.js";
 import { runMetamorphicTests } from "./metamorphic.js";
 
 export interface CompilePromptOptions {
@@ -35,15 +36,27 @@ interface ParsedIntent {
   riskTags: string[];
 }
 
-const CONSTRAINT_RE = /(must|should|cannot|can't|do not|without|only|never)/i;
-const NON_GOAL_RE = /(non-?goal|don't|do not|without|avoid|exclude|out of scope)/i;
-const ASSUMPTION_RE = /(assume|assuming|if )/i;
-const ACCEPTANCE_RE = /(acceptance|done when|success|verify|test|pass)/i;
+const CONSTRAINT_RE =
+  /(must|should|shall|required|cannot|can't|mustn'?t|do not|without|only|never|preserve|keep|禁止|必须|不能|不要|仅|只|保留|保持)/i;
+const NON_GOAL_RE =
+  /(non-?goal|won'?t|don't|do not|without|avoid|exclude|leave untouched|out of scope|not include|非目标|不做|不包括|不在范围|先不做|不要改动)/i;
+const ASSUMPTION_RE = /(assume|assuming|given|presuppose|if |假设|前提|如果|给定)/i;
+const ACCEPTANCE_RE =
+  /(acceptance|acceptance criteria|done when|success|verify|validation|test|pass|should return|expected|prove|验收|完成标准|成功|通过|测试|验证)/i;
+
+function normalizeSegment(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^[-*+]\s+/, "")
+    .replace(/^\d+[.)]\s+/, "")
+    .replace(/^（\d+）\s*/, "")
+    .trim();
+}
 
 function splitCandidateSentences(input: string): string[] {
   return input
     .split(/\n|\.|;|。|；/g)
-    .map((line) => line.trim())
+    .map((line) => normalizeSegment(line))
     .filter((line) => line.length > 2);
 }
 
@@ -276,6 +289,31 @@ function autoCorrectIR(baseline: IntentIR, context: PromptCompileContext, diagno
   return corrected;
 }
 
+function applySublimationPatch(intent: IntentIR, patch: IntentSublimationPatch): IntentIR {
+  const next: IntentIR = {
+    ...intent,
+    goals: patch.goals && patch.goals.length > 0 ? normalizeList(patch.goals) : intent.goals,
+    constraints:
+      patch.constraints && patch.constraints.length > 0 ? normalizeList(patch.constraints) : intent.constraints,
+    nonGoals: patch.nonGoals && patch.nonGoals.length > 0 ? normalizeList(patch.nonGoals) : intent.nonGoals,
+    assumptions:
+      patch.assumptions && patch.assumptions.length > 0 ? normalizeList(patch.assumptions) : intent.assumptions,
+    acceptanceCriteria:
+      patch.acceptanceCriteria && patch.acceptanceCriteria.length > 0
+        ? normalizeList(patch.acceptanceCriteria)
+        : intent.acceptanceCriteria,
+    affectedAreas:
+      patch.affectedAreas && patch.affectedAreas.length > 0 ? normalizeList(patch.affectedAreas) : intent.affectedAreas,
+    riskTags:
+      patch.riskTags && patch.riskTags.length > 0
+        ? normalizeList([...intent.riskTags, ...patch.riskTags])
+        : intent.riskTags,
+    evidenceRefs: [...intent.evidenceRefs]
+  };
+
+  return next;
+}
+
 export async function compilePromptInput(
   input: string,
   options: CompilePromptOptions = {}
@@ -286,7 +324,20 @@ export async function compilePromptInput(
 
   const parsed = parseIntent(normalizedInput, context);
   const baseline = buildBaselineIR(normalizedInput, parsed);
-  const corrected = autoCorrectIR(baseline, context, diagnostics);
+  let corrected = autoCorrectIR(baseline, context, diagnostics);
+
+  const llmSublimation = await sublimateWithUserLlm(normalizedInput, corrected, options.cwd ?? process.cwd());
+  if (llmSublimation.applied && llmSublimation.patch) {
+    corrected = applySublimationPatch(corrected, llmSublimation.patch);
+    corrected.evidenceRefs.push(`llm-sublimator:${llmSublimation.provider ?? "unknown"}`);
+    addDiagnostic(
+      diagnostics,
+      "llm.sublimation.applied",
+      "info",
+      `Applied user-side LLM sublimation via ${llmSublimation.provider ?? "unknown"}`,
+      "Set SALACIA_PROMPT_LLM=off to disable or SALACIA_PROMPT_LLM_PROVIDER=claude|gemini|chatgpt to pin provider"
+    );
+  }
 
   const validation = validateIntentIR(corrected);
   if (!validation.valid) {

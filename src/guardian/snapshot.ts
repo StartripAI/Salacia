@@ -126,18 +126,28 @@ export class SnapshotManager {
       throw new Error("Snapshot checksum mismatch: untracked manifest");
     }
 
+    // Step 1: Reset tracked files to the snapshot's git HEAD
+    // This handles files that were deleted or modified after the snapshot
+    await execFileAsync("git", ["checkout", metadata.gitHead, "--", "."], { cwd: this.root });
+    // Remove untracked files/dirs that appeared after the snapshot
+    // Exclude .salacia/ to preserve snapshot data needed for the remaining restore steps
+    await execFileAsync("git", ["clean", "-fd", "-e", ".salacia"], { cwd: this.root });
+
+    // Step 2: Re-apply the working tree diff that existed at snapshot time
     if (patch.trim()) {
       const temp = path.join(dir, "apply.patch");
       await fs.writeFile(temp, patch, "utf8");
-      await execFileAsync("git", ["apply", "-R", temp], { cwd: this.root });
+      await execFileAsync("git", ["apply", temp], { cwd: this.root });
     }
 
+    // Step 3: Re-apply the staged diff that existed at snapshot time
     if (stagedPatch.trim()) {
       const temp = path.join(dir, "apply-staged.patch");
       await fs.writeFile(temp, stagedPatch, "utf8");
-      await execFileAsync("git", ["apply", "--cached", "-R", temp], { cwd: this.root });
+      await execFileAsync("git", ["apply", "--cached", temp], { cwd: this.root });
     }
 
+    // Step 4: Restore untracked files that existed at snapshot time
     const manifest = JSON.parse(manifestRaw) as { files: string[] };
     for (const rel of manifest.files) {
       const backup = path.join(dir, "untracked", rel);

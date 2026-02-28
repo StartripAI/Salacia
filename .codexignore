@@ -1,0 +1,5 @@
+.salacia/
+node_modules/
+dist/
+third_party/
+config/swebench_*.json

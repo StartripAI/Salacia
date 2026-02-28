@@ -83,7 +83,7 @@ export interface ExecuteOptions {
   dryRun?: boolean;
   stage?: Stage;
   model?: string;
-  mode?: "auto" | "cli" | "sdk";
+  mode?: "auto" | "cli";
   externalAdvisors?: boolean;
 }
 
@@ -162,7 +162,7 @@ export interface BridgeHealthReport {
 export type AdvisorVote = "approve" | "reject" | "abstain";
 
 export interface AdvisorOpinion {
-  advisor: "codex" | "claude" | "gemini";
+  advisor: "codex" | "claude" | "gemini" | "chatgpt";
   vote: AdvisorVote;
   summary: string;
   evidenceRef?: string;
@@ -376,4 +376,217 @@ export interface SuperiorityAuditReport {
   failedChecks: string[];
   checks: SuperiorityAuditCheckResult[];
   reportPath: string;
+}
+
+export type BenchmarkSuite = "core" | "scale" | "full";
+
+export type BenchmarkDimension =
+  | "prompt_quality"
+  | "contract_integrity"
+  | "convergence_robustness"
+  | "execution_governance"
+  | "ide_native_depth"
+  | "protocol_behavior"
+  | "scale_stability"
+  | "compliance_audit"
+  | "anti_gaming";
+
+export type BenchmarkDimensionProvenance = "measured" | "profiled" | "unavailable";
+
+export type BenchmarkMethodPair =
+  | "internal-vs-measured"
+  | "internal-vs-profiled"
+  | "internal-vs-unavailable"
+  | "external-vs-measured"
+  | "external-vs-profiled"
+  | "external-vs-unavailable";
+
+export interface BenchmarkCase {
+  id: string;
+  dimension: BenchmarkDimension;
+  description: string;
+  critical: boolean;
+  hidden: boolean;
+  competitorComparable: boolean;
+}
+
+export interface BenchmarkProbeResult extends BenchmarkCase {
+  functionalPass: 0 | 1;
+  qualityScore: number;
+  reliabilityScore: number;
+  dimensionScore: number;
+  evidenceRefs: string[];
+  notes?: string;
+  metrics?: Record<string, number | string | boolean>;
+}
+
+export interface BenchmarkDimensionScore {
+  dimension: BenchmarkDimension;
+  cases: number;
+  functionalPassRate: number;
+  qualityScore: number;
+  reliabilityScore: number;
+  dimensionScore: number;
+}
+
+export interface BenchmarkRunConfig {
+  suite: BenchmarkSuite;
+  repeats: number;
+  seed: number;
+  includeHidden: boolean;
+  scale: {
+    targetFiles: number;
+    concurrency: number;
+    soakHours: number;
+  };
+}
+
+export interface BenchmarkRunReport {
+  metadata: {
+    runId: string;
+    generatedAt: string;
+    suite: BenchmarkSuite;
+    repeats: number;
+    seed: number;
+    gitCommit: string;
+    nodeVersion: string;
+    platform: string;
+    arch: string;
+    cpuModel: string;
+    cpuCount: number;
+    memoryBytes: number;
+    datasetHash: string;
+  };
+  config: BenchmarkRunConfig;
+  probeCount: number;
+  probes: BenchmarkProbeResult[];
+  dimensions: BenchmarkDimensionScore[];
+  overall: {
+    functionalPassRate: number;
+    qualityScore: number;
+    reliabilityScore: number;
+    score: number;
+  };
+  reportPath: string;
+  rawDir: string;
+  normalizedDir: string;
+}
+
+export interface BenchmarkAttestation {
+  method: "minisign" | "ed25519";
+  manifestPath: string;
+  signaturePath: string;
+  publicKeyPath: string;
+}
+
+export type CompetitorId =
+  | "salacia"
+  | "codex"
+  | "claude"
+  | "aider"
+  | "cline"
+  | "continue"
+  | "opencode"
+  | "cursor"
+  | "trellis";
+
+export interface CompetitorTaskSpec {
+  id: string;
+  title: string;
+  prompt: string;
+  verifyCommand: string[];
+}
+
+export interface CompetitorRunResult {
+  competitor: CompetitorId;
+  available: boolean;
+  measured: boolean;
+  success: boolean;
+  exitCode: number;
+  durationMs: number;
+  testsPassed: boolean;
+  changedFiles: string[];
+  repoPath: string;
+  stdoutPath: string;
+  stderrPath: string;
+  reason?: string;
+}
+
+export interface CompetitorRunReport {
+  runId: string;
+  generatedAt: string;
+  task: CompetitorTaskSpec;
+  results: CompetitorRunResult[];
+  reportPath: string;
+}
+
+export interface BenchmarkCompetitorRecord {
+  id: string;
+  name: string;
+  kind: "open-source" | "closed-source";
+  license: string;
+  source: string;
+  sampledAt: string;
+  provenance: "measured" | "profiled";
+  evidenceRefs: string[];
+  dimensions: Record<BenchmarkDimension, number | null>;
+  dimensionProvenance?: Partial<Record<BenchmarkDimension, BenchmarkDimensionProvenance>>;
+  strictMode?: {
+    status: "required" | "exempt";
+    reason?: string;
+  };
+}
+
+export interface BenchmarkComparisonDimensionResult {
+  dimension: BenchmarkDimension;
+  salacia: number | null;
+  competitor: number | null;
+  outcome: "win" | "loss" | "parity" | "excluded";
+  salaciaScoreSource: "internal-benchmark" | "external-competitor-run";
+  competitorDimensionProvenance: BenchmarkDimensionProvenance;
+  methodPair: BenchmarkMethodPair;
+  excludedReason?: "unavailable" | "method-mismatch" | "not-supported";
+  methodMismatch: boolean;
+  comparable: boolean;
+}
+
+export interface BenchmarkComparisonResult {
+  competitorId: string;
+  competitorName: string;
+  provenance: "measured" | "profiled";
+  evidenceRefs: string[];
+  strictMode: {
+    status: "required" | "exempt";
+    reason?: string;
+  };
+  comparablePairs: number;
+  wins: number;
+  losses: number;
+  ties: number;
+  winRate: number;
+  dimensions: BenchmarkComparisonDimensionResult[];
+}
+
+export interface SotaDecision {
+  runId: string;
+  passed: boolean;
+  winRate: number;
+  decisivePairs: number;
+  minimumDecisivePairs: number;
+  qualityFloor: number;
+  qualityFloorFailures: BenchmarkDimension[];
+  comparablePairs: number;
+  excludedCompetitors: string[];
+  competitors: BenchmarkComparisonResult[];
+  methodMismatchPairs: number;
+  excludedPairs: number;
+  externalComparablePairs: number;
+  internalOnlyPairs: number;
+  strictMode: boolean;
+  ci95: {
+    low: number;
+    high: number;
+  };
+  unmeasuredCompetitors: string[];
+  reasons: string[];
 }

@@ -19,6 +19,12 @@ export interface AcpDispatchResult {
   ok: boolean;
   details: string;
   response?: Record<string, unknown>;
+  error?: {
+    code: string;
+    message: string;
+    details?: string[];
+    retriable?: boolean;
+  };
 }
 
 const acpMessageSchema = {
@@ -36,13 +42,31 @@ const acpMessageSchema = {
 
 const validateMessage = ajv.compile(acpMessageSchema);
 
+export interface AcpTransport {
+  transport: string;
+  dispatch(message: AcpMessage): Promise<AcpDispatchResult>;
+}
+
+export function validateAcpMessage(message: unknown): { ok: boolean; errors: string[] } {
+  const valid = validateMessage(message);
+  if (valid) {
+    return { ok: true, errors: [] };
+  }
+
+  const errors =
+    validateMessage.errors?.map((err: { instancePath?: string; message?: string }) => `${err.instancePath || "/"}: ${err.message ?? "invalid"}`) ?? [
+      "invalid ACP message"
+    ];
+  return { ok: false, errors };
+}
+
 export class A2ADispatcher {
   async dispatch(message: AcpMessage): Promise<AcpDispatchResult> {
-    const valid = validateMessage(message);
-    if (!valid) {
+    const validation = validateAcpMessage(message);
+    if (!validation.ok) {
       return {
         ok: false,
-        details: `Invalid ACP message: ${JSON.stringify(validateMessage.errors)}`
+        details: `Invalid ACP message: ${validation.errors.join("; ")}`
       };
     }
 
@@ -77,11 +101,11 @@ export class OpenCodeAcpBridge {
   }
 
   async send(message: AcpMessage): Promise<AcpDispatchResult> {
-    const valid = validateMessage(message);
-    if (!valid) {
+    const validation = validateAcpMessage(message);
+    if (!validation.ok) {
       return {
         ok: false,
-        details: `Invalid ACP message: ${JSON.stringify(validateMessage.errors)}`
+        details: `Invalid ACP message: ${validation.errors.join("; ")}`
       };
     }
 

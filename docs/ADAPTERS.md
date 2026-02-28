@@ -14,13 +14,13 @@ Every adapter uses one flow:
 
 ### Claude Code
 
-- Mode: `sdk` preferred, `cli` fallback.
-- CLI mode requires runtime env injection.
+- Mode: `auto|cli`, both resolve to user-endpoint Claude CLI.
+- No hosted SDK execution path is used by Salacia.
 
 Example:
 
 ```bash
-salacia execute --adapter claude-code --mode sdk --dry-run --json
+salacia execute --adapter claude-code --mode cli --dry-run --json
 ```
 
 ### Codex

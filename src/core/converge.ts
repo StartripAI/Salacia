@@ -16,6 +16,7 @@ export interface ConvergeOptions {
   inputPath: string;
   cwd?: string;
   external?: boolean;
+  strictExternal?: boolean;
   timeoutMs?: number;
   retries?: number;
 }
@@ -24,6 +25,14 @@ interface AdvisorResponseShape {
   vote: AdvisorVote;
   summary: string;
   evidenceRef?: string;
+}
+
+function parseEnvInt(name: string, fallback: number): number {
+  const raw = (process.env[name] ?? "").trim();
+  if (!raw) return fallback;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return parsed;
 }
 
 function normalizeVote(value: string): AdvisorVote | null {
@@ -114,7 +123,7 @@ function buildLocalCodexOpinion(stage: Stage, inputRaw: string, inputPath: strin
 }
 
 async function runExternalAdvisor(
-  advisor: "claude" | "gemini",
+  advisor: "claude" | "gemini" | "chatgpt",
   scriptName: string,
   inputPath: string,
   cwd: string,
@@ -146,10 +155,17 @@ async function runExternalAdvisor(
         continue;
       }
 
+      const err = error as Error & { stderr?: string; stdout?: string };
+      const detail = [err.message, err.stderr ?? "", err.stdout ?? ""]
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0)
+        .join(" | ")
+        .slice(0, 500);
+
       return {
         advisor,
         vote: "abstain",
-        summary: `${advisor} unavailable after ${attempt} attempt(s): ${(error as Error).message}`,
+        summary: `${advisor} unavailable after ${attempt} attempt(s): ${detail}`,
         parseStatus: "invalid",
         evidenceRef: scriptPath
       };
@@ -165,7 +181,11 @@ async function runExternalAdvisor(
   };
 }
 
-export function resolveConvergence(stage: Stage, opinions: AdvisorOpinion[]): ConvergenceDecision {
+export function resolveConvergence(
+  stage: Stage,
+  opinions: AdvisorOpinion[],
+  options: { external?: boolean; strictExternal?: boolean } = {}
+): ConvergenceDecision {
   const votes = { approve: 0, reject: 0, abstain: 0 };
   const evidenceRefs: string[] = [];
   const conflicts: string[] = [];
@@ -182,7 +202,10 @@ export function resolveConvergence(stage: Stage, opinions: AdvisorOpinion[]): Co
   }
 
   let winner: AdvisorVote = "abstain";
-  if (votes.approve >= 2) {
+  if (votes.approve >= 2 && votes.reject >= 2) {
+    conflicts.push("Conflicting majority: approve and reject both reached threshold.");
+    winner = "abstain";
+  } else if (votes.approve >= 2) {
     winner = "approve";
   } else if (votes.reject >= 2) {
     winner = "reject";
@@ -192,32 +215,72 @@ export function resolveConvergence(stage: Stage, opinions: AdvisorOpinion[]): Co
     conflicts.push("No 2/3 majority. Human approval required.");
   }
 
+  const strictExternalBlocked = (() => {
+    if (!(options.external && options.strictExternal)) {
+      return false;
+    }
+
+    const externalOpinions = opinions.filter((opinion) => opinion.advisor !== "codex");
+    const strictCompliant = externalOpinions.filter(
+      (opinion) =>
+        opinion.parseStatus === "ok" &&
+        opinion.vote !== "abstain" &&
+        Boolean(opinion.evidenceRef && opinion.evidenceRef.trim().length > 0)
+    );
+
+    if (externalOpinions.length === 0) {
+      conflicts.push("strict external requires at least one external advisor");
+      return true;
+    }
+
+    if (strictCompliant.length === 0) {
+      conflicts.push(
+        "strict external requires at least one successful external advisor (parseStatus=ok, non-abstain, evidenceRef)"
+      );
+      return true;
+    }
+
+    for (const opinion of externalOpinions) {
+      if (!strictCompliant.includes(opinion)) {
+        conflicts.push(
+          `${opinion.advisor}: external advisor did not satisfy strict contract (non-blocking with other successful advisors)`
+        );
+      }
+    }
+
+    return false;
+  })();
+
+  if (strictExternalBlocked) {
+    winner = "abstain";
+  }
+
   return {
     stage,
     advisors: opinions,
     votes,
     winner,
     conflicts,
-    requiresHumanApproval: winner === "abstain",
+    requiresHumanApproval: winner === "abstain" || strictExternalBlocked,
     evidenceRefs
   };
 }
 
 export async function runConvergence(options: ConvergeOptions): Promise<ConvergenceDecision> {
   const cwd = options.cwd ?? process.cwd();
-  const timeoutMs = options.timeoutMs ?? 180_000;
-  const retries = options.retries ?? 1;
+  const timeoutMs = options.timeoutMs ?? parseEnvInt("SALACIA_CONVERGE_TIMEOUT_MS", 90_000);
+  const retries = options.retries ?? parseEnvInt("SALACIA_CONVERGE_RETRIES", 0);
 
   const inputRaw = await fs.readFile(options.inputPath, "utf8").catch(() => "");
   const opinions: AdvisorOpinion[] = [buildLocalCodexOpinion(options.stage, inputRaw, options.inputPath)];
 
   if (options.external) {
-    opinions.push(
-      await runExternalAdvisor("claude", "validate-claude.mjs", options.inputPath, cwd, timeoutMs, retries)
-    );
-    opinions.push(
-      await runExternalAdvisor("gemini", "validate-gemini.mjs", options.inputPath, cwd, timeoutMs, retries)
-    );
+    const externalOpinions = await Promise.all([
+      runExternalAdvisor("claude", "validate-claude.mjs", options.inputPath, cwd, timeoutMs, retries),
+      runExternalAdvisor("gemini", "validate-gemini.mjs", options.inputPath, cwd, timeoutMs, retries),
+      runExternalAdvisor("chatgpt", "validate-chatgpt.mjs", options.inputPath, cwd, timeoutMs, retries)
+    ]);
+    opinions.push(...externalOpinions);
   } else {
     opinions.push({
       advisor: "claude",
@@ -231,7 +294,16 @@ export async function runConvergence(options: ConvergeOptions): Promise<Converge
       summary: "External advisor skipped (external=false)",
       parseStatus: "fallback"
     });
+    opinions.push({
+      advisor: "chatgpt",
+      vote: "abstain",
+      summary: "External advisor skipped (external=false)",
+      parseStatus: "fallback"
+    });
   }
 
-  return resolveConvergence(options.stage, opinions);
+  return resolveConvergence(options.stage, opinions, {
+    external: Boolean(options.external),
+    strictExternal: Boolean(options.strictExternal)
+  });
 }

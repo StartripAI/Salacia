@@ -5,7 +5,9 @@ import type {
   BridgeHealthReport,
   DispatchContext
 } from "./base.js";
-import { UnifiedBridgeAdapter, commandExists, runCommand } from "./base.js";
+import { UnifiedBridgeAdapter, commandExists, resolveCommand, runCommand } from "./base.js";
+
+const MODEL_SOURCE = "user-endpoint-cli";
 
 export class ClaudeCodeAdapter extends UnifiedBridgeAdapter {
   name = "claude-code";
@@ -21,7 +23,9 @@ export class ClaudeCodeAdapter extends UnifiedBridgeAdapter {
   }
 
   async health(cwd: string): Promise<BridgeHealthReport> {
-    const available = await this.isAvailable();
+    const claudePath = await resolveCommand("claude");
+    const available = Boolean(claudePath);
+    const hasToken = Boolean((process.env.ANTHROPIC_AUTH_TOKEN ?? "").trim());
     return {
       target: this.name,
       available,
@@ -29,14 +33,19 @@ export class ClaudeCodeAdapter extends UnifiedBridgeAdapter {
         {
           name: "cli",
           ok: available,
-          detail: available ? "claude command found" : "claude command missing"
+          detail: available ? `claude command found: ${claudePath}` : "claude command missing"
+        },
+        {
+          name: "endpoint-source",
+          ok: true,
+          detail: "Execution is hard-locked to user-side CLI endpoint capabilities"
         },
         {
           name: "token",
-          ok: Boolean(process.env.ANTHROPIC_AUTH_TOKEN),
-          detail: process.env.ANTHROPIC_AUTH_TOKEN
-            ? "ANTHROPIC_AUTH_TOKEN is present"
-            : "ANTHROPIC_AUTH_TOKEN not set"
+          ok: hasToken,
+          detail: hasToken
+            ? "ANTHROPIC_AUTH_TOKEN present in runtime env"
+            : "ANTHROPIC_AUTH_TOKEN not set; relying on user-side Claude CLI login/session"
         }
       ]
     };
@@ -53,82 +62,55 @@ export class ClaudeCodeAdapter extends UnifiedBridgeAdapter {
       "Return concise result and risk notes."
     ].join("\n");
 
-    if (context.mode === "sdk" || context.mode === "auto") {
-      const sdkResult = await this.dispatchWithSdk(prompt, context);
-      if (sdkResult.success || context.mode === "sdk") {
-        return sdkResult;
-      }
-    }
-
     return this.dispatchWithCli(prompt, context);
   }
 
-  private async dispatchWithSdk(prompt: string, context: DispatchContext): Promise<BridgeDispatchResult> {
-    try {
-      const sdk: any = await import("@anthropic-ai/claude-agent-sdk/sdk.mjs");
-      if (!sdk?.unstable_v2_prompt) {
-        return {
-          success: false,
-          rawOutput: "Claude SDK unavailable: unstable_v2_prompt not found",
-          artifacts: [],
-          exitCode: 2
-        };
-      }
-
-      const response = await sdk.unstable_v2_prompt(prompt, {
-        cwd: context.cwd,
-        model: process.env.CLAUDE_MODEL ?? "claude-opus-4-6",
-        permissionMode: context.dryRun ? "plan" : "default"
-      });
-
-      return {
-        success: true,
-        rawOutput: JSON.stringify(response, null, 2),
-        artifacts: [],
-        exitCode: 0,
-        metadata: { mode: "sdk" }
-      };
-    } catch (error) {
-      return {
-        success: false,
-        rawOutput: `Claude SDK execution failed: ${(error as Error).message}`,
-        artifacts: [],
-        exitCode: 2,
-        metadata: { mode: "sdk" }
-      };
-    }
-  }
-
   private async dispatchWithCli(prompt: string, context: DispatchContext): Promise<BridgeDispatchResult> {
-    if (!process.env.ANTHROPIC_AUTH_TOKEN) {
+    const claudeCommand = await resolveCommand("claude");
+    if (!claudeCommand) {
       return {
         success: false,
-        rawOutput: "ANTHROPIC_AUTH_TOKEN is required for Claude CLI dispatch",
+        rawOutput: "Claude CLI not found on user endpoint; Salacia only uses user-side endpoint capabilities.",
         artifacts: [],
         exitCode: 2,
-        metadata: { mode: "cli" }
+        metadata: { mode: "cli", source: MODEL_SOURCE }
       };
     }
 
-    const env = {
-      ...process.env,
-      ANTHROPIC_BASE_URL: process.env.ANTHROPIC_BASE_URL ?? "https://yxai.anthropic.edu.pl",
-      ANTHROPIC_AUTH_TOKEN: process.env.ANTHROPIC_AUTH_TOKEN
-    };
+    const env = { ...process.env };
+    const token = (process.env.ANTHROPIC_AUTH_TOKEN ?? "").trim();
+    const baseUrl = (process.env.ANTHROPIC_BASE_URL ?? "").trim();
+    if (token) {
+      env.ANTHROPIC_AUTH_TOKEN = token;
+    }
+    if (baseUrl) {
+      env.ANTHROPIC_BASE_URL = baseUrl;
+    }
 
-    const result = await runCommand(
-      "claude",
-      ["-p", "--model", process.env.CLAUDE_MODEL ?? "claude-opus-4-6", prompt],
-      context.cwd,
-      env
-    );
+    if (context.dryRun) {
+      const probe = await runCommand(claudeCommand, ["--version"], context.cwd, env, 30_000);
+      return {
+        success: probe.success,
+        rawOutput: probe.success
+          ? `Claude user-endpoint probe succeeded (${claudeCommand})\n${probe.output}`
+          : `Claude user-endpoint probe failed (${claudeCommand})\n${probe.output}`,
+        artifacts: [],
+        exitCode: probe.exitCode,
+        metadata: { mode: "cli", source: MODEL_SOURCE, probe: "version" }
+      };
+    }
+
+    const model = (process.env.CLAUDE_MODEL ?? "").trim();
+    const args = model ? ["-p", "--model", model, prompt] : ["-p", prompt];
+
+    const result = await runCommand(claudeCommand, args, context.cwd, env);
 
     return {
       success: result.success,
       rawOutput: result.output,
       artifacts: [],
       exitCode: result.exitCode,
-      metadata: { mode: "cli" }
+      metadata: { mode: "cli", source: MODEL_SOURCE }
     };
   }
 }

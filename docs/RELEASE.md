@@ -20,7 +20,7 @@
 - superiority audit stronger-than-baseline passed
 - no unresolved split
 - advisor evidence present
-- GitHub release workflows use mock advisors only and do not inject external API keys
+- GitHub release workflows run real advisor CLIs with customer-managed provider credentials
 
 ## Commands
 
