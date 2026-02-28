@@ -28,12 +28,9 @@
             --green: #10b981;
             --green-soft: rgba(16, 185, 129, 0.08);
             --mint: #34d399;
-            --border: rgba(139, 92, 246, 0.12);
             --border-glass: rgba(255, 255, 255, 0.5);
-            --shadow-soft: 0 2px 40px rgba(139, 92, 246, 0.06);
             --shadow-glass: 0 8px 32px rgba(139, 92, 246, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
             --radius: 20px;
-            --radius-sm: 14px;
         }
 
         * {
@@ -55,7 +52,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ── Diffusion background ── */
+        /* ── Diffusion orbs ── */
         .diffusion-bg {
             position: fixed;
             top: 0;
@@ -64,10 +61,9 @@
             height: 100%;
             pointer-events: none;
             z-index: -1;
-            overflow: hidden;
         }
 
-        .diffusion-bg .orb {
+        .orb {
             position: absolute;
             border-radius: 50%;
             filter: blur(100px);
@@ -75,16 +71,15 @@
             animation: float 20s ease-in-out infinite;
         }
 
-        .diffusion-bg .orb-1 {
+        .orb-1 {
             width: 600px;
             height: 600px;
             background: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent);
             top: -150px;
             left: -100px;
-            animation-delay: 0s;
         }
 
-        .diffusion-bg .orb-2 {
+        .orb-2 {
             width: 500px;
             height: 500px;
             background: radial-gradient(circle, rgba(236, 72, 153, 0.2), transparent);
@@ -93,7 +88,7 @@
             animation-delay: -7s;
         }
 
-        .diffusion-bg .orb-3 {
+        .orb-3 {
             width: 400px;
             height: 400px;
             background: radial-gradient(circle, rgba(52, 211, 153, 0.2), transparent);
@@ -102,7 +97,7 @@
             animation-delay: -14s;
         }
 
-        .diffusion-bg .orb-4 {
+        .orb-4 {
             width: 350px;
             height: 350px;
             background: radial-gradient(circle, rgba(167, 139, 250, 0.2), transparent);
@@ -137,7 +132,6 @@
             padding: 0 24px;
         }
 
-        /* ── Glass card ── */
         .glass {
             background: var(--bg-glass);
             backdrop-filter: blur(24px) saturate(180%);
@@ -157,7 +151,7 @@
             padding: 10px 24px;
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 20px;
             border-radius: 100px;
         }
 
@@ -170,16 +164,32 @@
             -webkit-text-fill-color: transparent;
         }
 
-        nav a {
+        nav a,
+        nav .lang-btn {
             color: var(--text-secondary);
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
             transition: color 0.2s;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
         }
 
-        nav a:hover {
+        nav a:hover,
+        nav .lang-btn:hover {
             color: var(--text);
+        }
+
+        .lang-btn {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .lang-btn:hover {
+            background: var(--purple-soft);
         }
 
         /* ── Hero ── */
@@ -191,7 +201,6 @@
             align-items: center;
             text-align: center;
             padding: 120px 24px 80px;
-            position: relative;
         }
 
         .badge {
@@ -214,14 +223,12 @@
             line-height: 1.05;
             margin-bottom: 24px;
             letter-spacing: -0.04em;
-            color: var(--text);
         }
 
         .hero h1 .gradient {
             background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 60%, #f59e0b 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
         .hero .subtitle {
@@ -229,7 +236,6 @@
             color: var(--text-secondary);
             max-width: 560px;
             margin-bottom: 48px;
-            font-weight: 400;
         }
 
         .hero-code {
@@ -252,10 +258,6 @@
         .hero-code .prompt {
             color: var(--green);
             font-weight: 600;
-        }
-
-        .hero-code .cmd {
-            color: var(--text);
         }
 
         .hero-code .copy-hint {
@@ -453,7 +455,6 @@
         .step p {
             color: var(--text-secondary);
             font-size: 14px;
-            line-height: 1.6;
         }
 
         .step code {
@@ -527,7 +528,6 @@
             box-shadow: 0 12px 40px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
 
-        /* ── Footer ── */
         footer {
             border-top: 1px solid rgba(0, 0, 0, 0.05);
             padding: 32px 24px;
@@ -545,7 +545,6 @@
             text-decoration: underline;
         }
 
-        /* ── Mobile ── */
         @media (max-width: 768px) {
             .stats {
                 grid-template-columns: repeat(2, 1fr);
@@ -561,7 +560,7 @@
 
             nav {
                 padding: 8px 16px;
-                gap: 12px;
+                gap: 10px;
             }
 
             nav a {
@@ -569,7 +568,6 @@
             }
         }
 
-        /* ── Animations ── */
         @keyframes fadeUp {
             from {
                 opacity: 0;
@@ -610,7 +608,6 @@
 
 <body>
 
-    <!-- Diffusion background orbs -->
     <div class="diffusion-bg">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
@@ -621,23 +618,26 @@
     <!-- Nav -->
     <nav class="glass">
         <span class="logo">Salacia</span>
-        <a href="#how">How It Works</a>
-        <a href="#data">Benchmarks</a>
+        <a href="#how" data-i18n="nav_how">How It Works</a>
+        <a href="#data" data-i18n="nav_data">Benchmarks</a>
         <a href="https://github.com/StartripAI/Salacia">GitHub</a>
+        <button class="lang-btn" onclick="toggleLang()" id="langToggle">中文</button>
     </nav>
 
     <!-- Hero -->
     <section class="hero">
-        <span class="badge">✦ SWE-bench Verified · 117 Tasks Tested</span>
-        <h1><span class="gradient">Stop wasting tokens</span><br>on bad prompts.</h1>
-        <p class="subtitle">Salacia is the runtime that makes any AI coding agent smarter, faster, and cheaper.</p>
+        <span class="badge" data-i18n="badge">✦ SWE-bench Verified · 117 Tasks Tested</span>
+        <h1><span class="gradient" data-i18n="hero_gradient">Stop wasting tokens</span><br><span
+                data-i18n="hero_rest">on bad prompts.</span></h1>
+        <p class="subtitle" data-i18n="subtitle">Salacia is the runtime that makes any AI coding agent smarter, faster,
+            and cheaper.</p>
         <div class="hero-code glass"
-            onclick="navigator.clipboard.writeText('npx salacia init');this.classList.add('copied');this.querySelector('.copy-hint').textContent='Copied!'">
+            onclick="navigator.clipboard.writeText('npx salacia init');this.classList.add('copied');this.querySelector('.copy-hint').textContent=currentLang==='zh'?'已复制 ✓':'Copied!'">
             <span class="prompt">$</span>
             <span class="cmd">npx salacia init</span>
-            <span class="copy-hint">click to copy</span>
+            <span class="copy-hint" data-i18n="copy">click to copy</span>
         </div>
-        <p class="hero-hint">Works with Claude Code · Codex · Cursor · Cline · any agent</p>
+        <p class="hero-hint" data-i18n="compat">Works with Claude Code · Codex · Cursor · Cline · any agent</p>
     </section>
 
     <!-- Stats -->
@@ -645,19 +645,19 @@
         <div class="stats">
             <div class="stat glass">
                 <div class="stat-value green">+6%</div>
-                <div class="stat-label">More Bugs Solved</div>
+                <div class="stat-label" data-i18n="stat_bugs">More Bugs Solved</div>
             </div>
             <div class="stat glass">
                 <div class="stat-value purple">93%</div>
-                <div class="stat-label">FL Accuracy</div>
+                <div class="stat-label" data-i18n="stat_fl">FL Accuracy</div>
             </div>
             <div class="stat glass">
                 <div class="stat-value pink">2.2:1</div>
-                <div class="stat-label">Win Ratio</div>
+                <div class="stat-label" data-i18n="stat_win">Win Ratio</div>
             </div>
             <div class="stat glass">
                 <div class="stat-value mint">117</div>
-                <div class="stat-label">Tasks Tested</div>
+                <div class="stat-label" data-i18n="stat_tasks">Tasks Tested</div>
             </div>
         </div>
     </div>
@@ -665,26 +665,27 @@
     <!-- Comparison -->
     <section class="section" id="how">
         <div class="container">
-            <p class="section-label">The Problem</p>
-            <h2 class="section-title">Your AI agent is flying blind.</h2>
-            <p class="section-subtitle">Salacia gives it a map, a compass, and a verification contract.</p>
+            <p class="section-label" data-i18n="problem_label">The Problem</p>
+            <h2 class="section-title" data-i18n="problem_title">Your AI agent is flying blind.</h2>
+            <p class="section-subtitle" data-i18n="problem_subtitle">Salacia gives it a map, a compass, and a
+                verification contract.</p>
             <div class="comparison">
                 <div class="comparison-card before">
-                    <h3>Without Salacia</h3>
+                    <h3 data-i18n="without">Without Salacia</h3>
                     <ul>
-                        <li><span class="icon">🔍</span> Agent searches the entire repo</li>
-                        <li><span class="icon">🔄</span> 10+ turns of trial and error</li>
-                        <li><span class="icon">💸</span> Wastes tokens on wrong files</li>
-                        <li><span class="icon">❓</span> "It compiled" = done</li>
+                        <li><span class="icon">🔍</span><span data-i18n="w1">Agent searches the entire repo</span></li>
+                        <li><span class="icon">🔄</span><span data-i18n="w2">10+ turns of trial and error</span></li>
+                        <li><span class="icon">💸</span><span data-i18n="w3">Wastes tokens on wrong files</span></li>
+                        <li><span class="icon">❓</span><span data-i18n="w4">"It compiled" = done</span></li>
                     </ul>
                 </div>
                 <div class="comparison-card enhanced glass">
-                    <h3>With Salacia</h3>
+                    <h3 data-i18n="with">With Salacia</h3>
                     <ul>
-                        <li><span class="icon">🎯</span> Agent reads 2–3 targeted files</li>
-                        <li><span class="icon">⚡</span> 3–5 focused turns</li>
-                        <li><span class="icon">📍</span> 93% accurate fault localization</li>
-                        <li><span class="icon">✔️</span> Contract-verified correctness</li>
+                        <li><span class="icon">🎯</span><span data-i18n="s1">Agent reads 2–3 targeted files</span></li>
+                        <li><span class="icon">⚡</span><span data-i18n="s2">3–5 focused turns</span></li>
+                        <li><span class="icon">📍</span><span data-i18n="s3">93% accurate fault localization</span></li>
+                        <li><span class="icon">✔️</span><span data-i18n="s4">Contract-verified correctness</span></li>
                     </ul>
                 </div>
             </div>
@@ -694,26 +695,26 @@
     <!-- Steps -->
     <section class="section">
         <div class="container">
-            <p class="section-label">How It Works</p>
-            <h2 class="section-title">Three commands. That's it.</h2>
-            <p class="section-subtitle">From vibe to verified fix in under a minute.</p>
+            <p class="section-label" data-i18n="how_label">How It Works</p>
+            <h2 class="section-title" data-i18n="how_title">Three commands. That's it.</h2>
+            <p class="section-subtitle" data-i18n="how_subtitle">From vibe to verified fix in under a minute.</p>
             <div class="steps">
                 <div class="step glass">
                     <div class="step-num">1</div>
-                    <h3>Plan</h3>
-                    <p>Parse your intent into a contract with fault-localized context.</p>
+                    <h3 data-i18n="step1_title">Plan</h3>
+                    <p data-i18n="step1_desc">Parse your intent into a contract with fault-localized context.</p>
                     <code>salacia plan "fix the auth bug"</code>
                 </div>
                 <div class="step glass">
                     <div class="step-num">2</div>
-                    <h3>Execute</h3>
-                    <p>Dispatch to your agent with targeted files and test guidance.</p>
+                    <h3 data-i18n="step2_title">Execute</h3>
+                    <p data-i18n="step2_desc">Dispatch to your agent with targeted files and test guidance.</p>
                     <code>salacia execute --adapter claude-code</code>
                 </div>
                 <div class="step glass">
                     <div class="step-num">3</div>
-                    <h3>Validate</h3>
-                    <p>Verify against the contract — not just "it compiled."</p>
+                    <h3 data-i18n="step3_title">Validate</h3>
+                    <p data-i18n="step3_desc">Verify against the contract — not just "it compiled."</p>
                     <code>salacia validate</code>
                 </div>
             </div>
@@ -722,11 +723,14 @@
 
     <!-- CTA -->
     <section class="cta">
-        <h2>Your code runs on Node.<br>Your AI agent runs on <span style="color: var(--purple)">Salacia</span>.</h2>
-        <p>One command. Apache 2.0 licensed. Works with any agent.</p>
+        <h2 data-i18n-html="cta_title">Your code runs on Node.<br>Your AI agent runs on <span
+                style="color: var(--purple)">Salacia</span>.</h2>
+        <p data-i18n="cta_desc">One command. Apache 2.0 licensed. Works with any agent.</p>
         <div class="cta-buttons">
-            <a href="https://github.com/StartripAI/Salacia" class="btn btn-primary">⭐ Star on GitHub</a>
-            <a href="https://www.npmjs.com/package/salacia" class="btn btn-secondary glass">📦 View on npm</a>
+            <a href="https://github.com/StartripAI/Salacia" class="btn btn-primary" data-i18n="cta_gh">⭐ Star on
+                GitHub</a>
+            <a href="https://www.npmjs.com/package/salacia" class="btn btn-secondary glass" data-i18n="cta_npm">📦 View
+                on npm</a>
         </div>
     </section>
 
@@ -734,6 +738,131 @@
         <p>Made by <a href="https://github.com/StartripAI">StartripAI</a> · <a
                 href="https://github.com/StartripAI/Salacia/blob/main/LICENSE">Apache-2.0</a></p>
     </footer>
+
+    <script>
+        const i18n = {
+            en: {
+                nav_how: "How It Works",
+                nav_data: "Benchmarks",
+                badge: "✦ SWE-bench Verified · 117 Tasks Tested",
+                hero_gradient: "Stop wasting tokens",
+                hero_rest: "on bad prompts.",
+                subtitle: "Salacia is the runtime that makes any AI coding agent smarter, faster, and cheaper.",
+                copy: "click to copy",
+                compat: "Works with Claude Code · Codex · Cursor · Cline · any agent",
+                stat_bugs: "More Bugs Solved",
+                stat_fl: "FL Accuracy",
+                stat_win: "Win Ratio",
+                stat_tasks: "Tasks Tested",
+                problem_label: "The Problem",
+                problem_title: "Your AI agent is flying blind.",
+                problem_subtitle: "Salacia gives it a map, a compass, and a verification contract.",
+                without: "Without Salacia",
+                w1: "Agent searches the entire repo",
+                w2: "10+ turns of trial and error",
+                w3: "Wastes tokens on wrong files",
+                w4: '"It compiled" = done',
+                with: "With Salacia",
+                s1: "Agent reads 2–3 targeted files",
+                s2: "3–5 focused turns",
+                s3: "93% accurate fault localization",
+                s4: "Contract-verified correctness",
+                how_label: "How It Works",
+                how_title: "Three commands. That's it.",
+                how_subtitle: "From vibe to verified fix in under a minute.",
+                step1_title: "Plan",
+                step1_desc: "Parse your intent into a contract with fault-localized context.",
+                step2_title: "Execute",
+                step2_desc: "Dispatch to your agent with targeted files and test guidance.",
+                step3_title: "Validate",
+                step3_desc: "Verify against the contract — not just \"it compiled.\"",
+                cta_desc: "One command. Apache 2.0 licensed. Works with any agent.",
+                cta_gh: "⭐ Star on GitHub",
+                cta_npm: "📦 View on npm",
+            },
+            zh: {
+                nav_how: "工作原理",
+                nav_data: "性能数据",
+                badge: "✦ SWE-bench 实测 · 117 个真实任务验证",
+                hero_gradient: "别再让 AI 乱猜了",
+                hero_rest: "给它一张地图。",
+                subtitle: "Salacia 是 AI 编程 agent 的运行时 —— 让任何 agent 更准、更快、更省。",
+                copy: "点击复制",
+                compat: "支持 Claude Code · Codex · Cursor · Cline · 任意 agent",
+                stat_bugs: "修复率提升",
+                stat_fl: "定位准确率",
+                stat_win: "Scaffold 胜率",
+                stat_tasks: "验证任务数",
+                problem_label: "问题",
+                problem_title: "你的 AI agent 在盲猜。",
+                problem_subtitle: "Salacia 告诉它该看哪个文件、跑哪个测试、怎么验证。",
+                without: "没有 Salacia",
+                w1: "Agent 扫描整个仓库 🫠",
+                w2: "来回试错 10+ 轮",
+                w3: "钱全烧在错误文件上",
+                w4: "\"能编译\" = 完事了？",
+                with: "有 Salacia",
+                s1: "直奔 2-3 个目标文件 🎯",
+                s2: "3-5 轮精准修复",
+                s3: "93% 故障定位准确率",
+                s4: "合约级别的正确性验证 ✅",
+                how_label: "三步搞定",
+                how_title: "三条命令，没了。",
+                how_subtitle: "从需求到验证通过，不到一分钟。",
+                step1_title: "规划",
+                step1_desc: "把你的想法变成合约 + 上下文 + 故障定位。",
+                step2_title: "执行",
+                step2_desc: "把精准上下文交给 agent，让它少走弯路。",
+                step3_title: "验证",
+                step3_desc: "不是 \"能跑就行\" —— 是按合约逐项验证。",
+                cta_desc: "一条命令上手 · Apache 2.0 开源 · 兼容所有 agent",
+                cta_gh: "⭐ GitHub",
+                cta_npm: "📦 npm",
+            }
+        };
+
+        const ctaHtml = {
+            en: 'Your code runs on Node.<br>Your AI agent runs on <span style="color: var(--purple)">Salacia</span>.',
+            zh: '你的代码跑在 Node 上。<br>你的 AI agent 跑在 <span style="color: var(--purple)">Salacia</span> 上。'
+        };
+
+        let currentLang = 'en';
+
+        function applyLang(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+            document.getElementById('langToggle').textContent = lang === 'zh' ? 'EN' : '中文';
+
+            const strings = i18n[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (strings[key] !== undefined) el.textContent = strings[key];
+            });
+
+            // CTA title uses innerHTML
+            const ctaEl = document.querySelector('[data-i18n-html="cta_title"]');
+            if (ctaEl) ctaEl.innerHTML = ctaHtml[lang];
+
+            // Update page title
+            document.title = lang === 'zh'
+                ? 'Salacia — AI 编程 Agent 的运行时'
+                : 'Salacia — The Runtime for AI Coding Agents';
+
+            localStorage.setItem('salacia-lang', lang);
+        }
+
+        function toggleLang() {
+            applyLang(currentLang === 'en' ? 'zh' : 'en');
+        }
+
+        // Auto-detect: localStorage > navigator.language > 'en'
+        (function init() {
+            const saved = localStorage.getItem('salacia-lang');
+            if (saved) { applyLang(saved); return; }
+            const browserLang = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+            applyLang(browserLang.startsWith('zh') ? 'zh' : 'en');
+        })();
+    </script>
 
 </body>
 
