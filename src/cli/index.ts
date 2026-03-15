@@ -881,6 +881,147 @@ program
   );
 
 program
+  .command("install")
+  .description("Set up complete harness environment (agents, config, CLAUDE.md, AGENTS.md)")
+  .option("--json", "json output", false)
+  .action(async (opts: { json: boolean }) => {
+    const { runInstall } = await import("../core/install.js");
+    const result = await runInstall(process.cwd());
+
+    if (!opts.json) {
+      console.log("");
+      console.log("  \u{1F30A} Salacia Harness Engineer v0.1.2");
+      console.log("");
+
+      console.log("  \u2500\u2500 Pillar 1: Legible Environment \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500");
+      console.log(`    ${result.project.type !== "unknown" ? "\u2713" : "\u2717"} Detected: ${result.project.type} project`);
+      console.log(`    \u2713 Generated ${result.claudeMdPath}`);
+      console.log(`    \u2713 Generated ${result.agentsMdPath}`);
+      console.log(`    \u2713 Generated ${result.configPath}`);
+
+      console.log("  \u2500\u2500 Pillar 3: Self-Verification \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500");
+      if (result.project.testCommands.length > 0) {
+        for (const cmd of result.project.testCommands) console.log(`    \u2713 Test: ${cmd}`);
+      } else {
+        console.log("    \u26A0 No test command detected");
+      }
+      if (result.project.lintCommands.length > 0) {
+        for (const cmd of result.project.lintCommands) console.log(`    \u2713 Lint: ${cmd}`);
+      }
+
+      console.log("  \u2500\u2500 Pillar 4: Tool Orchestration \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500");
+      console.log("    AI Agents:");
+      for (const agent of result.agents) {
+        if (agent.kind === "executor") {
+          const status = agent.available ? `\u2713 ${agent.version ?? "available"}` : "\u2717 not found";
+          console.log(`      ${status}  ${agent.name}${agent.path ? ` (${agent.path})` : ""}`);
+        }
+      }
+
+      console.log("  \u2500\u2500 Pillar 5 & 6: Feedback + Oversight \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500");
+      console.log(`    \u2713 Default adapter: ${result.adapter}`);
+      console.log("    \u2713 Auto-rollback: ON");
+      console.log("    \u2713 Protected paths: .env, secrets/");
+
+      if (result.issues.length > 0) {
+        console.log("");
+        console.log("  Issues:");
+        for (const issue of result.issues) {
+          const icon = issue.severity === "error" ? "\u2717" : "\u26A0";
+          console.log(`    ${icon} ${issue.message}`);
+          if (issue.suggestion) console.log(`      \u2192 ${issue.suggestion}`);
+        }
+      }
+
+      console.log("");
+      if (result.ok) {
+        console.log("  \u2705 Harness ready!");
+        console.log('  Run: salacia run "describe your task"');
+      } else {
+        console.log("  \u274C Setup incomplete. Fix the errors above and try again.");
+      }
+      console.log("");
+    } else {
+      emit(result, true);
+    }
+
+    if (!result.ok) process.exit(1);
+  });
+
+program
+  .command("run")
+  .description("One-line harness: plan \u2192 execute \u2192 verify from a natural language vibe")
+  .argument("<vibe>", "What you want the AI agent to do")
+  .option("--adapter <name>", "adapter name (auto-detected if omitted)")
+  .option("--dry-run", "simulate without making changes", false)
+  .option("--no-rollback", "disable auto-rollback on failure")
+  .option("--verbose", "show detailed progress", false)
+  .option("--json", "json output", false)
+  .action(
+    async (
+      vibe: string,
+      opts: {
+        adapter?: string;
+        dryRun: boolean;
+        rollback: boolean;
+        verbose: boolean;
+        json: boolean;
+      }
+    ) => {
+      const { run } = await import("../core/run.js");
+
+      const onProgress = opts.json
+        ? undefined
+        : (stage: string, detail: string) => {
+            const icons: Record<string, string> = {
+              init: "\u2699\uFE0F",
+              detect: "\u{1F50D}",
+              plan: "\u{1F4CB}",
+              snapshot: "\u{1F4F8}",
+              execute: "\u26A1",
+              verify: "\u2705",
+              memory: "\u{1F4BE}",
+              done: "\u2728",
+              rollback: "\u23EA",
+              error: "\u274C"
+            };
+            console.log(`  ${icons[stage] ?? "\u2022"} ${detail}`);
+          };
+
+      const result = await run(vibe, {
+        cwd: process.cwd(),
+        adapter: opts.adapter,
+        dryRun: opts.dryRun,
+        rollback: opts.rollback,
+        onProgress
+      });
+
+      if (opts.json) {
+        emit(result, true);
+      } else {
+        console.log("");
+        if (result.ok) {
+          console.log(`  \u2705 Done! ${result.stepsCompleted}/${result.stepsTotal} steps completed and verified.`);
+        } else {
+          console.log(`  \u274C Run finished with errors.`);
+          for (const diag of result.diagnostics) {
+            if (diag.severity === "error") {
+              console.log(`     \u2022 ${diag.message}`);
+              console.log(`       \u2192 ${diag.suggestion}`);
+            }
+          }
+          if (result.rolledBack) {
+            console.log("  \u23EA Changes have been rolled back to the pre-run state.");
+          }
+        }
+        console.log("");
+      }
+
+      if (!result.ok) process.exit(1);
+    }
+  );
+
+program
   .command("mcp-server")
   .description("Run Salacia MCP server over stdio")
   .action(async () => {
