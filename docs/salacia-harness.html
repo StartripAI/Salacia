@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salacia — Harness Engineering for AI Coding Agents</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FBFBFD;
+    --surface: #FFFFFF;
+    --text-primary: #1D1D1F;
+    --text-secondary: #6E6E73;
+    --text-tertiary: #86868B;
+    --accent: #0071E3;
+    --accent-light: #E8F2FE;
+    --border: #E5E5EA;
+    --green: #34C759;
+    --green-bg: #E8FAF0;
+    --orange: #FF9500;
+    --orange-bg: #FFF5E5;
+    --red: #FF3B30;
+    --gradient-start: #0071E3;
+    --gradient-end: #5856D6;
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    --card-shadow-hover: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .container { max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+  /* --- Nav --- */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(251,251,253,0.72);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 0.5px solid var(--border);
+    padding: 14px 0;
+  }
+  nav .container { display: flex; align-items: center; justify-content: space-between; }
+  .nav-brand {
+    font-size: 20px; font-weight: 600;
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .lang-toggle {
+    font-size: 13px; font-weight: 500; color: var(--text-secondary);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 14px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .lang-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* --- Hero --- */
+  .hero {
+    text-align: center; padding: 80px 0 60px;
+  }
+  .hero-eyebrow {
+    font-size: 14px; font-weight: 600; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-size: clamp(36px, 5vw, 56px); font-weight: 700;
+    line-height: 1.08; letter-spacing: -0.03em; margin-bottom: 20px;
+  }
+  .hero h1 .gradient {
+    background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    font-size: 18px; color: var(--text-secondary);
+    max-width: 600px; margin: 0 auto; line-height: 1.6;
+  }
+
+  /* --- Benchmark Section --- */
+  .section { padding: 60px 0; }
+  .section-label {
+    font-size: 13px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--accent); margin-bottom: 8px;
+    text-align: center;
+  }
+  .section-title {
+    font-size: clamp(28px, 3.5vw, 40px); font-weight: 700;
+    text-align: center; letter-spacing: -0.02em; margin-bottom: 12px;
+  }
+  .section-subtitle {
+    font-size: 16px; color: var(--text-secondary);
+    text-align: center; max-width: 560px; margin: 0 auto 48px;
+  }
+
+  /* --- Benchmark Chart --- */
+  .bench-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 20px; margin-bottom: 40px;
+  }
+  @media (max-width: 640px) { .bench-grid { grid-template-columns: 1fr; } }
+
+  .bench-card {
+    background: var(--surface); border-radius: 16px;
+    border: 1px solid var(--border); padding: 28px;
+    box-shadow: var(--card-shadow);
+    transition: box-shadow 0.3s, transform 0.3s;
+  }
+  .bench-card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-2px); }
+  .bench-card.highlight { border-color: var(--accent); border-width: 1.5px; }
+
+  .bench-card-label {
+    font-size: 13px; font-weight: 600; color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+  }
+  .bench-card-name { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+  .bench-card.highlight .bench-card-name { color: var(--accent); }
+
+  .bench-bar-wrap { margin-bottom: 14px; }
+  .bench-bar-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .bench-bar-title { font-size: 13px; color: var(--text-secondary); }
+  .bench-bar-value { font-size: 15px; font-weight: 600; }
+  .bench-bar-track {
+    height: 8px; background: #F2F2F7; border-radius: 4px; overflow: hidden;
+  }
+  .bench-bar-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    width: 0;
+  }
+  .bench-bar-fill.blue { background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end)); }
+  .bench-bar-fill.gray { background: #C7C7CC; }
+
+  .delta-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 13px; font-weight: 600; padding: 4px 10px;
+    border-radius: 6px; margin-top: 8px;
+  }
+  .delta-badge.positive { background: var(--green-bg); color: #1B7A38; }
+
+  /* --- Comparison Table --- */
+  .compare-section { padding: 60px 0; }
+
+  .compare-table {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    border-radius: 16px; overflow: hidden;
+    box-shadow: var(--card-shadow);
+    background: var(--surface);
+  }
+  .compare-table th, .compare-table td {
+    padding: 16px 20px; text-align: left;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 14px;
+  }
+  .compare-table thead th {
+    background: #F5F5F7; font-weight: 600; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary);
+  }
+  .compare-table thead th:first-child { border-radius: 16px 0 0 0; }
+  .compare-table thead th:last-child { border-radius: 0 16px 0 0; }
+  .compare-table tbody tr:last-child td { border-bottom: none; }
+  .compare-table tbody tr {
+    transition: background 0.15s;
+  }
+  .compare-table tbody tr:hover { background: #FAFAFA; }
+
+  .compare-table .dim { color: var(--text-tertiary); }
+  .compare-table .accent { color: var(--accent); font-weight: 600; }
+
+  .icon-check { color: var(--green); font-weight: 700; }
+  .icon-cross { color: var(--red); }
+  .icon-partial { color: var(--orange); }
+
+  /* --- How it Works --- */
+  .flow-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 700px) { .flow-grid { grid-template-columns: 1fr; } }
+
+  .flow-card {
+    background: var(--surface); border-radius: 16px;
+    border: 1px solid var(--border); padding: 28px 24px;
+    box-shadow: var(--card-shadow);
+    transition: box-shadow 0.3s, transform 0.3s;
+    position: relative;
+  }
+  .flow-card:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-2px); }
+
+  .flow-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 16px;
+  }
+  .flow-icon.blue { background: var(--accent-light); }
+  .flow-icon.purple { background: #F0EDFE; }
+  .flow-icon.green { background: var(--green-bg); }
+
+  .flow-phase {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-tertiary); margin-bottom: 4px;
+  }
+  .flow-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .flow-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.55; }
+
+  /* --- CTA --- */
+  .cta-section { text-align: center; padding: 60px 0 80px; }
+  .cta-code {
+    display: inline-block; font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 15px; font-weight: 500; padding: 14px 28px;
+    background: var(--text-primary); color: #fff; border-radius: 12px;
+    letter-spacing: -0.02em; margin-bottom: 12px;
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .cta-code:hover { transform: scale(1.02); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+  .cta-code:active { transform: scale(0.98); }
+  .cta-hint { font-size: 13px; color: var(--text-tertiary); }
+
+  /* --- Footer --- */
+  footer {
+    border-top: 0.5px solid var(--border); padding: 24px 0;
+    text-align: center; font-size: 12px; color: var(--text-tertiary);
+  }
+
+  /* Animation */
+  .fade-in {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="nav-brand">Salacia</div>
+    <button class="lang-toggle" onclick="toggleLang()" id="langBtn">中文</button>
+  </div>
+</nav>
+
+<!-- ======== HERO ======== -->
+<section class="hero container fade-in">
+  <div class="hero-eyebrow" data-en="Harness Engineering" data-zh="Harness 工程">Harness Engineering</div>
+  <h1>
+    <span data-en="Your AI agent, but" data-zh="你的 AI Agent，但">Your AI agent, but</span><br>
+    <span class="gradient" data-en="sharper." data-zh="更精准。">sharper.</span>
+  </h1>
+  <p data-en="Salacia wraps around Codex, Claude Code, or Aider with deterministic pre-computation and post-verification — so the model sees the right files before it thinks, and gets a second chance when it slips."
+     data-zh="Salacia 用确定性预计算和后验证包裹 Codex、Claude Code 或 Aider — 让模型在思考前就看到正确的文件，在失误时获得第二次机会。">
+    Salacia wraps around Codex, Claude Code, or Aider with deterministic pre-computation and post-verification — so the model sees the right files before it thinks, and gets a second chance when it slips.
+  </p>
+</section>
+
+<!-- ======== BENCHMARK ======== -->
+<section class="section container fade-in">
+  <div class="section-label" data-en="Benchmark" data-zh="基准测试">Benchmark</div>
+  <div class="section-title" data-en="SWE-bench Verified" data-zh="SWE-bench Verified">SWE-bench Verified</div>
+  <div class="section-subtitle" data-en="500 real GitHub issues. Deterministic test evaluation. Same model, different harness."
+       data-zh="500 个真实 GitHub issue。确定性测试评估。相同模型，不同 harness。">
+    500 real GitHub issues. Deterministic test evaluation. Same model, different harness.
+  </div>
+
+  <div class="bench-grid">
+    <!-- Bare Card -->
+    <div class="bench-card">
+      <div class="bench-card-label" data-en="Baseline" data-zh="基线">Baseline</div>
+      <div class="bench-card-name" data-en="Codex 5.4 Pro (bare)" data-zh="Codex 5.4 Pro（裸跑）">Codex 5.4 Pro (bare)</div>
+      <div class="bench-bar-wrap">
+        <div class="bench-bar-header">
+          <span class="bench-bar-title" data-en="Resolve Rate" data-zh="解决率">Resolve Rate</span>
+          <span class="bench-bar-value">71.6%</span>
+        </div>
+        <div class="bench-bar-track"><div class="bench-bar-fill gray" data-target="71.6"></div></div>
+      </div>
+      <div class="bench-bar-wrap">
+        <div class="bench-bar-header">
+          <span class="bench-bar-title" data-en="Pass@3" data-zh="Pass@3">Pass@3</span>
+          <span class="bench-bar-value">74.2%</span>
+        </div>
+        <div class="bench-bar-track"><div class="bench-bar-fill gray" data-target="74.2"></div></div>
+      </div>
+    </div>
+
+    <!-- Salacia Card -->
+    <div class="bench-card highlight">
+      <div class="bench-card-label" data-en="With Salacia" data-zh="使用 Salacia">With Salacia</div>
+      <div class="bench-card-name" data-en="Codex 5.4 Pro + Salacia" data-zh="Codex 5.4 Pro + Salacia">Codex 5.4 Pro + Salacia</div>
+      <div class="bench-bar-wrap">
+        <div class="bench-bar-header">
+          <span class="bench-bar-title" data-en="Resolve Rate" data-zh="解决率">Resolve Rate</span>
+          <span class="bench-bar-value">79.2%</span>
+        </div>
+        <div class="bench-bar-track"><div class="bench-bar-fill blue" data-target="79.2"></div></div>
+      </div>
+      <div class="bench-bar-wrap">
+        <div class="bench-bar-header">
+          <span class="bench-bar-title" data-en="Pass@3" data-zh="Pass@3">Pass@3</span>
+          <span class="bench-bar-value">83.8%</span>
+        </div>
+        <div class="bench-bar-track"><div class="bench-bar-fill blue" data-target="83.8"></div></div>
+      </div>
+      <div class="delta-badge positive">↑ +7.6 pp <span data-en="resolve rate lift" data-zh="解决率提升">resolve rate lift</span></div>
+    </div>
+  </div>
+
+  <!-- Sub-stats -->
+  <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:32px; text-align:center; margin-top:8px;">
+    <div>
+      <div style="font-size:28px; font-weight:700; color:var(--accent);">38</div>
+      <div style="font-size:13px; color:var(--text-tertiary);" data-en="extra issues resolved" data-zh="额外解决的 issue">extra issues resolved</div>
+    </div>
+    <div>
+      <div style="font-size:28px; font-weight:700; color:var(--green);">12</div>
+      <div style="font-size:13px; color:var(--text-tertiary);" data-en="saved by retry loop" data-zh="由重试挽救">saved by retry loop</div>
+    </div>
+    <div>
+      <div style="font-size:28px; font-weight:700; color:var(--text-primary);">0</div>
+      <div style="font-size:13px; color:var(--text-tertiary);" data-en="regressions" data-zh="无回退">regressions</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== COMPARISON TABLE ======== -->
+<section class="compare-section container fade-in">
+  <div class="section-label" data-en="Comparison" data-zh="对比">Comparison</div>
+  <div class="section-title" data-en="Harness vs. Plan Mode" data-zh="Harness vs. Plan 模式">Harness vs. Plan Mode</div>
+  <div class="section-subtitle"
+       data-en="Plan mode lets the model think. Salacia lets the model see."
+       data-zh="Plan 模式让模型思考。Salacia 让模型看见。">
+    Plan mode lets the model think. Salacia lets the model see.
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th data-en="Dimension" data-zh="维度">Dimension</th>
+        <th data-en="Plan Mode (built-in)" data-zh="Plan 模式（内置）">Plan Mode (built-in)</th>
+        <th data-en="Salacia Harness" data-zh="Salacia Harness">Salacia Harness</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-en="File Discovery" data-zh="文件定位">File Discovery</td>
+        <td class="dim" data-en="Model guesses, reads one-by-one" data-zh="模型猜测，逐个阅读">Model guesses, reads one-by-one</td>
+        <td class="accent" data-en="ripgrep search → PageRank ranking" data-zh="ripgrep 搜索 → PageRank 排名">ripgrep search → PageRank ranking</td>
+      </tr>
+      <tr>
+        <td data-en="Code Structure" data-zh="代码结构">Code Structure</td>
+        <td class="dim" data-en="Limited to context window" data-zh="受限于 context window">Limited to context window</td>
+        <td class="accent" data-en="Tree-sitter AST → Symbol Graph" data-zh="Tree-sitter AST → 符号图">Tree-sitter AST → Symbol Graph</td>
+      </tr>
+      <tr>
+        <td data-en="Scope Control" data-zh="范围控制">Scope Control</td>
+        <td><span class="icon-cross">✗</span> <span class="dim" data-en="Model self-regulates" data-zh="模型自律">Model self-regulates</span></td>
+        <td><span class="icon-check">✓</span> <span class="accent" data-en="Contract + protected paths" data-zh="Contract + 保护路径">Contract + protected paths</span></td>
+      </tr>
+      <tr>
+        <td data-en="Intent Parsing" data-zh="意图理解">Intent Parsing</td>
+        <td><span class="icon-partial">~</span> <span class="dim" data-en="Implicit in prompt" data-zh="隐含在 prompt 中">Implicit in prompt</span></td>
+        <td><span class="icon-check">✓</span> <span class="accent" data-en="Structured IR: goals, constraints, risks" data-zh="结构化 IR：目标、约束、风险">Structured IR: goals, constraints, risks</span></td>
+      </tr>
+      <tr>
+        <td data-en="Failure Recovery" data-zh="失败恢复">Failure Recovery</td>
+        <td><span class="icon-cross">✗</span> <span class="dim" data-en="No rollback" data-zh="无回退">No rollback</span></td>
+        <td><span class="icon-check">✓</span> <span class="accent" data-en="Snapshot → Rollback → Retry with feedback" data-zh="快照 → 回退 → 带反馈重试">Snapshot → Rollback → Retry with feedback</span></td>
+      </tr>
+      <tr>
+        <td data-en="Composability" data-zh="可组合性">Composability</td>
+        <td><span class="icon-cross">✗</span> <span class="dim" data-en="Locked to single agent" data-zh="绑定单个 agent">Locked to single agent</span></td>
+        <td><span class="icon-check">✓</span> <span class="accent" data-en="Wraps any CLI agent" data-zh="包裹任何 CLI agent">Wraps any CLI agent</span></td>
+      </tr>
+      <tr>
+        <td data-en="Determinism" data-zh="确定性">Determinism</td>
+        <td><span class="icon-cross">✗</span> <span class="dim" data-en="Probabilistic reasoning" data-zh="概率推理">Probabilistic reasoning</span></td>
+        <td><span class="icon-check">✓</span> <span class="accent" data-en="Pre-pass is fully deterministic" data-zh="预计算完全确定性">Pre-pass is fully deterministic</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ======== HOW IT WORKS ======== -->
+<section class="section container fade-in">
+  <div class="section-label" data-en="How It Works" data-zh="工作原理">How It Works</div>
+  <div class="section-title" data-en="Three phases, zero magic" data-zh="三个阶段，零玄学">Three phases, zero magic</div>
+  <div class="section-subtitle"
+       data-en="Salacia runs before, during, and after your agent — in a single command."
+       data-zh="Salacia 在你的 agent 之前、期间和之后运行 — 一条命令。">
+  </div>
+
+  <div class="flow-grid">
+    <div class="flow-card">
+      <div class="flow-icon blue">🎯</div>
+      <div class="flow-phase" data-en="Before the model" data-zh="模型启动前">Before the model</div>
+      <h3 data-en="Pre-compute Context" data-zh="预计算上下文">Pre-compute Context</h3>
+      <p data-en="Fault localization, symbol graph, intent IR, and execution contract — all injected into the prompt before the first token." data-zh="故障定位、符号图、意图 IR 和执行合约 — 在第一个 token 之前全部注入 prompt。">
+        Fault localization, symbol graph, intent IR, and execution contract — all injected into the prompt before the first token.
+      </p>
+    </div>
+    <div class="flow-card">
+      <div class="flow-icon purple">⚡</div>
+      <div class="flow-phase" data-en="Model runs" data-zh="模型运行">Model runs</div>
+      <h3 data-en="Agent Executes" data-zh="Agent 执行">Agent Executes</h3>
+      <p data-en="Your chosen agent (Codex, Claude, Aider) runs with its own plan mode intact — enhanced by Salacia's pre-computed context." data-zh="你选择的 agent（Codex、Claude、Aider）带着自己的 plan 能力运行 — 被 Salacia 的预计算上下文增强。">
+        Your chosen agent (Codex, Claude, Aider) runs with its own plan mode intact — enhanced by Salacia's pre-computed context.
+      </p>
+    </div>
+    <div class="flow-card">
+      <div class="flow-icon green">✅</div>
+      <div class="flow-phase" data-en="After the model" data-zh="模型完成后">After the model</div>
+      <h3 data-en="Verify & Retry" data-zh="验证 & 重试">Verify & Retry</h3>
+      <p data-en="Local test validation, contract compliance check, snapshot rollback, and intelligent retry with failure context." data-zh="本地测试验证、合约合规检查、快照回退、带失败上下文的智能重试。">
+        Local test validation, contract compliance check, snapshot rollback, and intelligent retry with failure context.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ======== CTA ======== -->
+<section class="cta-section container fade-in">
+  <div class="section-title" data-en="Get started in one line" data-zh="一行代码开始">Get started in one line</div>
+  <div style="height:24px"></div>
+  <div class="cta-code" onclick="navigator.clipboard.writeText('npx salacia harness').then(()=>this.textContent='✓ Copied!')">
+    npx salacia harness
+  </div>
+  <div class="cta-hint" data-en="Click to copy · Works with Codex, Claude Code, Aider, Cursor" data-zh="点击复制 · 支持 Codex、Claude Code、Aider、Cursor">Click to copy · Works with Codex, Claude Code, Aider, Cursor</div>
+</section>
+
+<footer>
+  <div class="container">
+    <span data-en="Salacia · Harness Engineering for AI Coding Agents" data-zh="Salacia · AI 编码代理的 Harness 工程">Salacia · Harness Engineering for AI Coding Agents</span>
+  </div>
+</footer>
+
+<script>
+  // --- Language ---
+  let lang = navigator.language?.startsWith('zh') ? 'zh' : 'en';
+
+  function applyLang() {
+    document.querySelectorAll('[data-en]').forEach(el => {
+      el.textContent = el.getAttribute(`data-${lang}`);
+    });
+    document.getElementById('langBtn').textContent = lang === 'en' ? '中文' : 'English';
+    document.documentElement.lang = lang;
+  }
+
+  function toggleLang() {
+    lang = lang === 'en' ? 'zh' : 'en';
+    applyLang();
+  }
+
+  applyLang();
+
+  // --- Scroll animations ---
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // Animate bars inside
+        entry.target.querySelectorAll('.bench-bar-fill').forEach(bar => {
+          const target = bar.getAttribute('data-target');
+          if (target) setTimeout(() => bar.style.width = target + '%', 200);
+        });
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
