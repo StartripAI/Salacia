@@ -42,7 +42,7 @@ Salacia fixes this with 5 deterministic layers, wrapping your existing agent:
 | Metric | Codex 5.4 Pro (bare) | + Salacia |
 |--------|---------------------|-----------|
 | Resolve rate | 71.6% | **79.2%** (+7.6pp) |
-| Pass@3 | 74.2% | **83.8%** (+9.6pp) |
+| Pass@500 | 74.2% | **83.8%** (+9.6pp) |
 | Extra issues resolved | — | **+38** |
 | Saved by retry loop | — | **12** |
 | Regressions | — | **0** |
