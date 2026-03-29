@@ -380,6 +380,30 @@ nav .lang-btn:hover {
     padding: 76px 0;
 }
 
+.showcase {
+    padding-top: 32px;
+}
+
+.showcase-card {
+    padding: 18px;
+    border-radius: 28px;
+}
+
+.showcase-image {
+    display: block;
+    width: 100%;
+    border-radius: 22px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+}
+
+.showcase-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
 .stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

@@ -25,6 +25,8 @@ It sits between your repository and your agent run, compiles a machine-readable 
 
 This is not just “better prompting.” It is a governable way to run coding agents inside real repositories.
 
+![Salacia demo](docs/assets/salacia-demo.gif)
+
 ## Quick Start
 
 ```bash
@@ -39,6 +41,8 @@ Inspect the result:
 salacia judge
 salacia trace
 ```
+
+![Salacia trace screenshot](docs/assets/salacia-trace.png)
 
 ## Why People Reach For Salacia
 
