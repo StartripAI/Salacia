@@ -783,50 +783,6 @@ program
   );
 
 program
-  .command("run")
-  .description("Run blueprint-backed harness flow with context, judge, and promotion")
-  .option("--adapter <name>", "adapter name")
-  .option("--dry-run", "do not run mutating tools", false)
-  .option("--mode <mode>", "adapter mode (auto|cli)", "auto")
-  .option("--json", "json output", false)
-  .action(async (opts: { adapter?: string; dryRun: boolean; mode: string; json: boolean }) => {
-    const cwd = process.cwd();
-    const blueprint = await loadBlueprint(cwd);
-    if (!blueprint) {
-      emit({ ok: false, error: "Missing blueprint. Run salacia design first." }, true);
-      process.exit(1);
-    }
-
-    let mode: "auto" | "cli";
-    try {
-      mode = parseExecuteMode(opts.mode);
-    } catch (error) {
-      emit({ ok: false, error: (error as Error).message }, true);
-      process.exit(1);
-      return;
-    }
-
-    const result = await runBlueprint({
-      root: cwd,
-      blueprint,
-      dryRun: opts.dryRun,
-      mode,
-      ...(opts.adapter ? { adapterName: opts.adapter } : {})
-    });
-
-    emit(
-      {
-        ok: result.judge.promotionDecision === "accept",
-        runId: result.runId,
-        summary: result.summary,
-        judge: result.judge
-      },
-      opts.json || true
-    );
-    if (result.judge.promotionDecision !== "accept") process.exit(1);
-  });
-
-program
   .command("judge")
   .description("Inspect the judge report for a run")
   .option("--run <runId>", "run id")
@@ -1133,24 +1089,64 @@ program
 
 program
   .command("run")
-  .description("One-line harness: plan \u2192 execute \u2192 verify from a natural language vibe")
-  .argument("<vibe>", "What you want the AI agent to do")
+  .description("Run either the blueprint-backed harness flow or the one-line vibe flow")
+  .argument("[vibe]", "What you want the AI agent to do")
   .option("--adapter <name>", "adapter name (auto-detected if omitted)")
   .option("--dry-run", "simulate without making changes", false)
   .option("--no-rollback", "disable auto-rollback on failure")
+  .option("--mode <mode>", "adapter mode (auto|cli)", "auto")
   .option("--verbose", "show detailed progress", false)
   .option("--json", "json output", false)
   .action(
     async (
-      vibe: string,
+      vibe: string | undefined,
       opts: {
         adapter?: string;
         dryRun: boolean;
         rollback: boolean;
+        mode: string;
         verbose: boolean;
         json: boolean;
       }
     ) => {
+      if (!vibe || !vibe.trim()) {
+        const cwd = process.cwd();
+        const blueprint = await loadBlueprint(cwd);
+        if (!blueprint) {
+          emit({ ok: false, error: "Missing blueprint. Run salacia design first." }, true);
+          process.exit(1);
+        }
+
+        let mode: "auto" | "cli";
+        try {
+          mode = parseExecuteMode(opts.mode);
+        } catch (error) {
+          emit({ ok: false, error: (error as Error).message }, true);
+          process.exit(1);
+          return;
+        }
+
+        const result = await runBlueprint({
+          root: cwd,
+          blueprint,
+          dryRun: opts.dryRun,
+          mode,
+          ...(opts.adapter ? { adapterName: opts.adapter } : {})
+        });
+
+        emit(
+          {
+            ok: result.judge.promotionDecision === "accept",
+            runId: result.runId,
+            summary: result.summary,
+            judge: result.judge
+          },
+          opts.json || true
+        );
+        if (result.judge.promotionDecision !== "accept") process.exit(1);
+        return;
+      }
+
       const { run } = await import("../core/run.js");
 
       const onProgress = opts.json
