@@ -76,7 +76,9 @@ describe("Vibe → Intent Parsing", () => {
         const r = await compilePromptInput("delete production user data and rotate auth keys immediately");
         expect(r.question).not.toBeNull();
         // Use the recommended option for whatever question type was generated
-        const recommendedId = r.question!.options.find((o) => o.recommended)?.id ?? r.question!.options[0].id;
+        const fallbackOption = r.question!.options[0];
+        expect(fallbackOption).toBeDefined();
+        const recommendedId = r.question!.options.find((o) => o.recommended)?.id ?? fallbackOption!.id;
         const updated = applyDisambiguationAnswer(r.ir, r.question!, recommendedId);
         expect(updated.constraints.length).toBeGreaterThan(r.ir.constraints.length);
         expect(updated.riskTags.length).toBeGreaterThan(r.ir.riskTags.length);

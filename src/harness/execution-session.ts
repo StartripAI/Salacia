@@ -2,8 +2,7 @@ import fs from "node:fs/promises";
 import type { IncrementalExecutionSummary } from "./incremental.js";
 import type { MultiAgentExecutionSummary } from "./multi-agent.js";
 import type { CoordinationDispatchResult, CoordinationProtocol } from "./protocol-dispatch.js";
-import type { ConsistencyReport } from "../core/types.js";
-import type { VerificationSummary } from "../guardian/verify.js";
+import type { ConsistencyReport, VerificationSummary } from "../core/types.js";
 import { getRunPaths } from "../core/paths.js";
 
 export type ExecutionTerminalStatus = "pass" | "fail" | "blocked";

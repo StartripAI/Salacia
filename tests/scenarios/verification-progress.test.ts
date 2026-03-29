@@ -31,20 +31,38 @@ async function tmpDir(): Promise<string> {
     return root;
 }
 
+function firstResult(results: Array<{ success: boolean; exitCode: number; output: string }>) {
+    const item = results[0];
+    expect(item).toBeDefined();
+    return item!;
+}
+
+function secondResult(results: Array<{ success: boolean; exitCode: number }>) {
+    const item = results[1];
+    expect(item).toBeDefined();
+    return item!;
+}
+
+function firstProgressItem(items: Array<{ status: string; passes: boolean }>) {
+    const item = items[0];
+    expect(item).toBeDefined();
+    return item!;
+}
+
 describe("Verification System", () => {
     it("P01: single passing command → success", async () => {
         const cwd = await tmpDir();
         const r = await runVerificationCommands("c1", ['node -e "process.exit(0)"'], cwd);
         expect(r.success).toBe(true);
         expect(r.results.length).toBe(1);
-        expect(r.results[0].success).toBe(true);
+        expect(firstResult(r.results).success).toBe(true);
     });
 
     it("P02: single failing command → failure", async () => {
         const cwd = await tmpDir();
         const r = await runVerificationCommands("c1", ['node -e "process.exit(1)"'], cwd);
         expect(r.success).toBe(false);
-        expect(r.results[0].success).toBe(false);
+        expect(firstResult(r.results).success).toBe(false);
     });
 
     it("P03: multiple all pass → success", async () => {
@@ -63,14 +81,14 @@ describe("Verification System", () => {
     it("P05: command output captured", async () => {
         const cwd = await tmpDir();
         const r = await runVerificationCommands("c1", ['node -e "console.log(42)"'], cwd);
-        expect(r.results[0].output).toContain("42");
+        expect(firstResult(r.results).output).toContain("42");
     });
 
     it("P06: exit code recorded", async () => {
         const cwd = await tmpDir();
         const r = await runVerificationCommands("c1", ['node -e "process.exit(0)"', 'node -e "process.exit(1)"'], cwd);
-        expect(r.results[0].exitCode).toBe(0);
-        expect(r.results[1].exitCode).not.toBe(0);
+        expect(firstResult(r.results).exitCode).toBe(0);
+        expect(secondResult(r.results).exitCode).not.toBe(0);
     });
 
     it("P07: evidence path created", async () => {
@@ -93,7 +111,7 @@ describe("Verification System", () => {
         c.verification.commands = ['node -e "console.log(99)"'];
         const r = await runVerification(c, cwd);
         expect(r.success).toBe(true);
-        expect(r.results[0].output).toContain("99");
+        expect(firstResult(r.results).output).toContain("99");
     });
 
     it("P10: empty commands → success", async () => {
@@ -129,7 +147,8 @@ describe("Progress Tracking", () => {
         });
         await tracker.updateStep("s1", "doing", false);
         const p = await tracker.read();
-        expect(p!.items[0].status).toBe("doing");
+        expect(p).not.toBeNull();
+        expect(firstProgressItem(p!.items).status).toBe("doing");
     });
 
     it("P13: updateStep done with passes=true", async () => {
@@ -141,8 +160,9 @@ describe("Progress Tracking", () => {
         });
         await tracker.updateStep("s1", "done", true);
         const p = await tracker.read();
-        expect(p!.items[0].status).toBe("done");
-        expect(p!.items[0].passes).toBe(true);
+        expect(p).not.toBeNull();
+        expect(firstProgressItem(p!.items).status).toBe("done");
+        expect(firstProgressItem(p!.items).passes).toBe(true);
     });
 
     it("P14: updateStep failed", async () => {
@@ -154,8 +174,9 @@ describe("Progress Tracking", () => {
         });
         await tracker.updateStep("s1", "failed", false);
         const p = await tracker.read();
-        expect(p!.items[0].status).toBe("failed");
-        expect(p!.items[0].passes).toBe(false);
+        expect(p).not.toBeNull();
+        expect(firstProgressItem(p!.items).status).toBe("failed");
+        expect(firstProgressItem(p!.items).passes).toBe(false);
     });
 
     it("P15: read after write → consistent", async () => {
@@ -169,7 +190,9 @@ describe("Progress Tracking", () => {
         // Read twice — should be same
         const p1 = await tracker.read();
         const p2 = await tracker.read();
-        expect(p1!.items[0].status).toBe(p2!.items[0].status);
+        expect(p1).not.toBeNull();
+        expect(p2).not.toBeNull();
+        expect(firstProgressItem(p1!.items).status).toBe(firstProgressItem(p2!.items).status);
     });
 
     it("P16: multiple steps independent", async () => {
