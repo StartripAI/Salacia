@@ -1,14 +1,29 @@
 # Salacia
 
+[![npm version](https://img.shields.io/npm/v/salacia?style=flat-square)](https://www.npmjs.com/package/salacia)
+[![license](https://img.shields.io/github/license/StartripAI/Salacia?style=flat-square)](https://github.com/StartripAI/Salacia/blob/main/LICENSE)
+[![node](https://img.shields.io/badge/node-%3E%3D20-1f2937?style=flat-square)](https://nodejs.org/)
+[![runtime](https://img.shields.io/badge/category-agent%20harness-1366ff?style=flat-square)](https://github.com/StartripAI/Salacia)
+[![surface](https://img.shields.io/badge/surface-CLI%20%2B%20MCP%20%2B%20release%20gates-18b77a?style=flat-square)](https://github.com/StartripAI/Salacia)
+
 > **The Operating Harness for AI Coding Agents**
 >
 > Context, boundaries, verification, and promotion for Claude Code, Codex, Cursor, Cline, OpenCode, and more.
 
-AI coding agents are already good at writing code. What they still lack is execution discipline: what context to load, what files they are allowed to touch, how the result is judged, and when a patch should actually be promoted.
+**Tags:** `agent-runtime` `context-pack` `judge-loop` `release-gates` `worktrees` `mcp`
+
+AI coding agents are already strong at generating code. What they still lack is execution discipline:
+
+- what context to load
+- what files they are allowed to touch
+- how the outcome is verified
+- when a patch should actually be promoted
 
 Salacia turns those concerns into runtime primitives.
 
-It sits between your repository and your agent run, compiles a machine-readable program for the task, builds a bounded `ContextPack`, executes inside an isolated workspace, verifies the outcome, and emits an auditable `accept / reject / blocked` decision. The result is not just a more capable agent run. It is a governable one.
+It sits between your repository and your agent run, compiles a machine-readable program for the task, builds a bounded `ContextPack`, executes inside an isolated workspace, verifies the result, and emits an auditable `accept / reject / blocked` decision.
+
+This is not just “better prompting.” It is a governable way to run coding agents inside real repositories.
 
 ## Quick Start
 
@@ -18,39 +33,27 @@ salacia design
 salacia run
 ```
 
-Then inspect the decision and trace:
+Inspect the result:
 
 ```bash
 salacia judge
 salacia trace
 ```
 
-## What Salacia Is
+## Why People Reach For Salacia
 
-Salacia is not another coding agent.
+### 🧭 A bounded context, not a giant prompt
 
-It is the harness/runtime layer that makes coding agents usable inside real repositories:
-
-1. **`program.md`** declares the goal, mutable surface, verification, and promotion policy.
-2. **`design`** compiles that into a machine-readable blueprint.
-3. **`run`** builds a `ContextPack`, dispatches the agent in a bounded workspace, and collects the candidate patch.
-4. **`judge`** decides whether the result should be accepted, rejected, or blocked.
-5. **`trace`** exposes the event log, artifacts, and evidence behind that decision.
-
-## Three Defining Capabilities
-
-### 1. ContextPack
-
-Every run gets a repository-aware context package:
+Every run gets a repository-aware `ContextPack`:
 
 - ranked repo map
-- working set and code snippets
+- working set and snippets
 - recent run history
 - explicit guardrails
 
-Instead of forcing the agent to rediscover your codebase from scratch, Salacia gives it a bounded, high-signal execution context.
+Instead of forcing the agent to rediscover your codebase from scratch, Salacia gives it a bounded, high-signal map.
 
-### 2. JudgeLoop
+### ⚖️ A real verdict, not “looks good to me”
 
 Every run ends in a hard outcome:
 
@@ -58,11 +61,11 @@ Every run ends in a hard outcome:
 - `reject`
 - `blocked`
 
-No “looks good to me.” No silent drift from generated patch to promoted patch. Verification, policy, and patch surface all feed into the final decision.
+Verification, patch surface, and policy all feed into the final decision.
 
-### 3. Evidence-Native Harness
+### 📦 One evidence model across runtime, eval, and release
 
-Runtime, eval, and release policy share the same evidence model:
+Runtime, eval, and release policy share the same evidence shape:
 
 - inputs
 - context evidence
@@ -71,31 +74,33 @@ Runtime, eval, and release policy share the same evidence model:
 - promotion decision
 - evidence refs
 
-That means product runs, benchmarks, and release gates are finally speaking the same language.
+That means product runs, benchmarks, and release gates finally speak the same language.
 
-## Why Teams Reach For Salacia
+## What Salacia Is
 
-### Raw agents are powerful, but fragile
+Salacia is **not** another coding agent.
 
-Without a harness, coding agents tend to:
+It is the harness/runtime layer that makes coding agents usable inside real engineering workflows:
 
-- over-read the repository
-- over-edit beyond the intended surface
-- mix generation with promotion
-- blur product runs and benchmark runs into incompatible traces
+1. **`program.md`** declares the goal, mutable surface, verification, and promotion policy.
+2. **`design`** compiles that into a machine-readable blueprint.
+3. **`run`** builds a `ContextPack`, dispatches the agent in a bounded workspace, and collects the candidate patch.
+4. **`judge`** decides whether the result should be accepted, rejected, or blocked.
+5. **`trace`** exposes the event log, artifacts, and evidence behind that decision.
 
-Salacia makes those concerns explicit and enforceable.
+## Who It’s For
 
-### The right abstraction is not “better prompting”
+### 👨‍💻 Developers
 
-The real bottleneck in serious codebase work is not prompt cleverness. It is runtime structure:
+Drop Salacia in front of the agent you already use and stop letting every run start from zero.
 
-- what the agent is allowed to see
-- what it is allowed to change
-- how success is verified
-- how failure is contained
+### 🏗️ Agent builders
 
-Salacia is designed around that runtime layer.
+Use Salacia as the execution layer beneath your coding agent, IDE bridge, or internal developer workflow.
+
+### 🧪 Teams running evals and release gates
+
+Reuse the same runtime evidence model for experiments, quality gates, and production policy.
 
 ## How a Run Works
 
@@ -120,11 +125,11 @@ Artifacts produced by a run:
 
 ## Why This Is Different
 
-### Not another coding agent
+### 🚫 Not another coding agent
 
-Salacia does not compete with Claude Code, Codex, Cursor, or other agent products. It makes them more governable inside a real engineering workflow.
+Salacia does not compete with Claude Code, Codex, Cursor, or other agent products. It makes them more governable inside a real repository.
 
-### Not just an IDE plugin
+### 🧩 Not just an IDE plugin
 
 IDE bridges are supported, but the core abstraction is the harness:
 
@@ -133,7 +138,7 @@ IDE bridges are supported, but the core abstraction is the harness:
 - judge loop
 - evidence model
 
-### Not benchmark-only infrastructure
+### 📊 Not benchmark-only infrastructure
 
 Benchmarks and superiority audits are first-class, but they reuse the same runtime evidence model instead of living in a separate reporting universe.
 
@@ -169,7 +174,7 @@ Salacia v0.2 is organized around four planes:
 - `harness plane`: run session, verification, judge, promotion
 - `eval plane`: benchmark, superiority, release gate consumption
 
-## Links
+## Community Links
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Operations](docs/OPERATIONS.md)

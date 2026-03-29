@@ -9,7 +9,7 @@
         content="Salacia is the operating harness for AI coding agents. It builds the right context, enforces boundaries, verifies outcomes, and only then promotes patches.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -20,47 +20,96 @@
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
-        <div class="orb orb-4"></div>
     </div>
 
-    <nav class="glass">
+    <nav class="glass nav-shell">
         <span class="logo">Salacia</span>
-        <a href="#how" data-i18n="nav_how">How It Works</a>
-        <a href="#data" data-i18n="nav_data">Capabilities</a>
-        <a href="https://github.com/StartripAI/Salacia">GitHub</a>
+        <div class="nav-links">
+            <a href="#how" data-i18n="nav_how">How It Works</a>
+            <a href="#switchboard" data-i18n="nav_usecases">Use Cases</a>
+            <a href="#capabilities" data-i18n="nav_data">Capabilities</a>
+            <a href="https://github.com/StartripAI/Salacia">GitHub</a>
+        </div>
         <button class="lang-btn" onclick="toggleLang()" id="langToggle">中文</button>
     </nav>
 
     <section class="hero">
-        <span class="badge" data-i18n="badge">✦ ContextPack · JudgeLoop · Promotion by Evidence</span>
-        <h1><span class="gradient" data-i18n="hero_gradient">Turn coding agents</span><br><span
-                data-i18n="hero_rest">into governed engineering runs.</span></h1>
-        <p class="subtitle" data-i18n="subtitle">Salacia is the operating harness for AI coding agents: it builds the
-            right context, enforces boundaries, verifies the outcome, and only then promotes the patch.</p>
-        <div class="hero-code glass" id="copyBtn">
-            <span class="prompt">$</span>
-            <span class="cmd">npx salacia init</span>
-            <span class="copy-hint" data-i18n="copy">click to copy</span>
+        <div class="hero-copy">
+            <span class="badge" data-i18n="badge">✦ ContextPack · JudgeLoop · Promotion by Evidence</span>
+            <h1><span class="gradient" data-i18n="hero_gradient">Turn coding agents</span><br><span
+                    data-i18n="hero_rest">into governed engineering runs.</span></h1>
+            <p class="subtitle" data-i18n="subtitle">Salacia is the operating harness for AI coding agents: it builds
+                the right context, enforces boundaries, verifies the outcome, and only then promotes the patch.</p>
+            <div class="hero-tags">
+                <span class="tag" data-i18n="tag_oss">Open source</span>
+                <span class="tag" data-i18n="tag_cli">CLI-first</span>
+                <span class="tag" data-i18n="tag_eval">Eval-native</span>
+                <span class="tag" data-i18n="tag_release">Release gates</span>
+                <span class="tag" data-i18n="tag_mcp">MCP-ready</span>
+            </div>
+            <div class="hero-actions">
+                <a href="https://github.com/StartripAI/Salacia" class="btn btn-primary" data-i18n="hero_cta_primary">See the repo</a>
+                <a href="#how" class="btn btn-secondary glass" data-i18n="hero_cta_secondary">See how a run works</a>
+            </div>
+            <div class="hero-code glass" id="copyBtn">
+                <span class="prompt">$</span>
+                <span class="cmd">npx salacia init</span>
+                <span class="copy-hint" data-i18n="copy">click to copy</span>
+            </div>
+            <p class="hero-hint" data-i18n="compat">Claude Code · Codex · Cursor · Cline · OpenCode · Antigravity</p>
         </div>
-        <p class="hero-hint" data-i18n="compat">Claude Code · Codex · Cursor · Cline · OpenCode · Antigravity</p>
+
+        <div class="hero-panel glass">
+            <div class="panel-label" data-i18n="panel_label">Run shape</div>
+            <div class="panel-flow">
+                <div class="flow-step">
+                    <span class="flow-icon">📋</span>
+                    <div>
+                        <strong data-i18n="flow_1_title">Program</strong>
+                        <p data-i18n="flow_1_desc">Goal, mutable surface, verification, promotion policy.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <span class="flow-icon">🗺️</span>
+                    <div>
+                        <strong data-i18n="flow_2_title">ContextPack</strong>
+                        <p data-i18n="flow_2_desc">Repo map, working set, history, guardrails.</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <span class="flow-icon">⚖️</span>
+                    <div>
+                        <strong data-i18n="flow_3_title">Judge</strong>
+                        <p data-i18n="flow_3_desc">Accept, reject, or block with traceable evidence.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-foot">
+                <span class="pill pill-blue">accept</span>
+                <span class="pill pill-amber">reject</span>
+                <span class="pill pill-slate">blocked</span>
+            </div>
+        </div>
     </section>
 
-    <div class="container" id="data">
-        <div class="stats">
-            <div class="stat glass">
-                <div class="stat-value purple" data-i18n="feature1_val">ContextPack</div>
-                <div class="stat-label" data-i18n="feature1_label">repo map · working set · history · guardrails</div>
-            </div>
-            <div class="stat glass">
-                <div class="stat-value green" data-i18n="feature2_val">JudgeLoop</div>
-                <div class="stat-label" data-i18n="feature2_label">accept · reject · blocked</div>
-            </div>
-            <div class="stat glass">
-                <div class="stat-value pink" data-i18n="feature3_val">Evidence</div>
-                <div class="stat-label" data-i18n="feature3_label">runtime · eval · release gate speak one language</div>
+    <section class="section" id="capabilities">
+        <div class="container">
+            <div class="stats">
+                <div class="stat glass">
+                    <div class="stat-value blue" data-i18n="feature1_val">ContextPack</div>
+                    <div class="stat-label" data-i18n="feature1_label">repo map · working set · history · guardrails</div>
+                </div>
+                <div class="stat glass">
+                    <div class="stat-value green" data-i18n="feature2_val">JudgeLoop</div>
+                    <div class="stat-label" data-i18n="feature2_label">accept · reject · blocked</div>
+                </div>
+                <div class="stat glass">
+                    <div class="stat-value orange" data-i18n="feature3_val">Evidence</div>
+                    <div class="stat-label" data-i18n="feature3_label">runtime · eval · release gate speak one language</div>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <section class="section">
         <div class="container">
@@ -86,6 +135,57 @@
                         <li><span class="icon">🧪</span><span data-i18n="s3">Promotion is explicit, not implied</span></li>
                         <li><span class="icon">📦</span><span data-i18n="s4">Runtime, eval, and release share one evidence model</span></li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="switchboard">
+        <div class="container">
+            <p class="section-label" data-i18n="switch_label">Choose Your Lens</p>
+            <h2 class="section-title" data-i18n="switch_title">One project, three ways to use it.</h2>
+            <p class="section-subtitle" data-i18n="switch_subtitle">This is where Salacia stops looking like a demo and starts looking like infrastructure.</p>
+
+            <div class="switchboard glass">
+                <div class="switch-tabs" role="tablist">
+                    <button class="switch-tab is-active" data-view="devs" data-i18n="switch_tab_devs">For developers</button>
+                    <button class="switch-tab" data-view="builders" data-i18n="switch_tab_builders">For agent builders</button>
+                    <button class="switch-tab" data-view="teams" data-i18n="switch_tab_teams">For teams</button>
+                </div>
+
+                <div class="switch-panels">
+                    <article class="switch-panel is-active" data-panel="devs">
+                        <span class="panel-kicker" data-i18n="devs_kicker">Drop it in front of the agent you already use.</span>
+                        <h3 data-i18n="devs_title">Stop every run from starting at zero.</h3>
+                        <p data-i18n="devs_desc">Use Salacia when the model is smart enough to solve the task, but still wastes time loading the wrong files, changing too much, or shipping changes without a clear verdict.</p>
+                        <ul class="mini-list">
+                            <li data-i18n="devs_point_1">🧭 Bounded context instead of a giant prompt</li>
+                            <li data-i18n="devs_point_2">🧪 Verification-backed promotion</li>
+                            <li data-i18n="devs_point_3">📚 Traceable evidence after every run</li>
+                        </ul>
+                    </article>
+
+                    <article class="switch-panel" data-panel="builders">
+                        <span class="panel-kicker" data-i18n="builders_kicker">Use Salacia as the execution layer.</span>
+                        <h3 data-i18n="builders_title">Put a runtime underneath your coding agent.</h3>
+                        <p data-i18n="builders_desc">If you are building an agent, IDE bridge, or internal assistant, Salacia gives you a control plane, a context plane, and a judge loop without forcing you to replace your agent model.</p>
+                        <ul class="mini-list">
+                            <li data-i18n="builders_point_1">📦 `program.md` + blueprint as a control plane</li>
+                            <li data-i18n="builders_point_2">🔌 CLI, MCP, and release-gate surfaces</li>
+                            <li data-i18n="builders_point_3">⚖️ Judge reports you can consume programmatically</li>
+                        </ul>
+                    </article>
+
+                    <article class="switch-panel" data-panel="teams">
+                        <span class="panel-kicker" data-i18n="teams_kicker">Turn agent runs into team workflows.</span>
+                        <h3 data-i18n="teams_title">Bring eval and release policy closer to production.</h3>
+                        <p data-i18n="teams_desc">Salacia is useful when your problem is no longer “can the model code,” but “how do we make these runs reviewable, comparable, and safe to promote.”</p>
+                        <ul class="mini-list">
+                            <li data-i18n="teams_point_1">📈 Runtime, eval, and release share one evidence model</li>
+                            <li data-i18n="teams_point_2">🛡️ Mutable surface and protected paths are explicit</li>
+                            <li data-i18n="teams_point_3">🚦 Accept / reject / blocked is a policy output, not a vibe</li>
+                        </ul>
+                    </article>
                 </div>
             </div>
         </div>
@@ -126,13 +226,11 @@
     </section>
 
     <section class="cta">
-        <h2 id="ctaTitle">Smarter agents help.<br><span class="purple">Governed runs</span> scale.</h2>
+        <h2 id="ctaTitle">Smarter agents help.<br><span class="accent-text">Governed runs</span> scale.</h2>
         <p data-i18n="cta_desc">Open source. Apache 2.0. Built for teams that want coding agents to behave like engineering systems, not demos.</p>
         <div class="cta-buttons">
-            <a href="https://github.com/StartripAI/Salacia" class="btn btn-primary" data-i18n="cta_gh">⭐ Star on
-                GitHub</a>
-            <a href="https://www.npmjs.com/package/salacia" class="btn btn-secondary glass" data-i18n="cta_npm">📦 View
-                on npm</a>
+            <a href="https://github.com/StartripAI/Salacia" class="btn btn-primary" data-i18n="cta_gh">⭐ Star on GitHub</a>
+            <a href="https://www.npmjs.com/package/salacia" class="btn btn-secondary glass" data-i18n="cta_npm">📦 View on npm</a>
         </div>
     </section>
 
@@ -142,6 +240,25 @@
     </footer>
 
     <script src="i18n.js"></script>
+    <script>
+        (function () {
+            const tabs = Array.from(document.querySelectorAll('.switch-tab'));
+            const panels = Array.from(document.querySelectorAll('.switch-panel'));
+
+            function setView(view) {
+                tabs.forEach((tab) => tab.classList.toggle('is-active', tab.dataset.view === view));
+                panels.forEach((panel) => panel.classList.toggle('is-active', panel.dataset.panel === view));
+            }
+
+            tabs.forEach((tab) => {
+                tab.addEventListener('click', function () {
+                    setView(tab.dataset.view);
+                });
+            });
+
+            setView('devs');
+        })();
+    </script>
 </body>
 
 </html>
