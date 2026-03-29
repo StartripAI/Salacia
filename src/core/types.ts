@@ -103,6 +103,19 @@ export interface ValidationResult {
   messages: string[];
 }
 
+export interface VerifyCommandResult {
+  command: string;
+  success: boolean;
+  exitCode: number;
+  output: string;
+}
+
+export interface VerificationSummary {
+  success: boolean;
+  results: VerifyCommandResult[];
+  evidencePath?: string;
+}
+
 export type AdapterCapability =
   | "plan"
   | "execute"
@@ -589,4 +602,166 @@ export interface SotaDecision {
   };
   unmeasuredCompetitors: string[];
   reasons: string[];
+}
+
+export interface ProgramBudget {
+  maxFiles: number;
+  maxSymbols: number;
+  maxSnippetChars: number;
+  maxHistoryEntries: number;
+}
+
+export interface Blueprint {
+  id: string;
+  version: "v2";
+  generatedAt: string;
+  programPath: string;
+  goal: string;
+  constraints: string[];
+  mutableSurface: string[];
+  protectedSurface: string[];
+  successMetrics: string[];
+  budget: ProgramBudget;
+  verificationCommands: string[];
+  promotionPolicy: string[];
+}
+
+export interface ContextPackFileMatch {
+  path: string;
+  hitCount: number;
+  sampleLines: Array<{
+    keyword: string;
+    line: number;
+    preview: string;
+  }>;
+}
+
+export interface RankedRepoFile {
+  path: string;
+  rank: number;
+  hitCount: number;
+}
+
+export interface RankedRepoSymbol {
+  filePath: string;
+  name: string;
+  kind: string;
+  line: number;
+  rank: number;
+}
+
+export interface RepoMapSummary {
+  engine: "tree-sitter" | "fallback-regex";
+  text: string;
+  rankedText: string;
+  topFiles: RankedRepoFile[];
+  topSymbols: RankedRepoSymbol[];
+}
+
+export interface WorkingSetSummary {
+  keywords: string[];
+  relevantFiles: ContextPackFileMatch[];
+  codeSnippets: string;
+}
+
+export interface RunHistoryEntry {
+  runId: string;
+  finishedAt: string;
+  status: "accepted" | "rejected" | "blocked" | "failed" | "running";
+  judgeDecision: "accept" | "reject" | "blocked";
+  promotionDecision: "accept" | "reject" | "blocked";
+  summary: string;
+  summaryPath: string;
+}
+
+export interface ContextPack {
+  generatedAt: string;
+  blueprintId: string;
+  intent: {
+    goal: string;
+    constraints: string[];
+    successMetrics: string[];
+  };
+  repoMap: RepoMapSummary;
+  workingSet: WorkingSetSummary;
+  runHistory: RunHistoryEntry[];
+  guardrails: {
+    mutableSurface: string[];
+    protectedSurface: string[];
+    verificationCommands: string[];
+  };
+  evidenceRefs: string[];
+}
+
+export interface RunEvent {
+  type:
+    | "compile_program"
+    | "build_context"
+    | "prepare_workspace"
+    | "dispatch_agent"
+    | "collect_patch"
+    | "run_verification"
+    | "run_judge"
+    | "promote_or_revert"
+    | "finalize_session";
+  timestamp: string;
+  data: Record<string, unknown>;
+}
+
+export type JudgeDecision = "accept" | "reject" | "blocked";
+export type PromotionDecision = "accept" | "reject" | "blocked";
+
+export interface JudgeIssue {
+  code: "protected-path" | "out-of-scope-write" | "verification-failed" | "adapter-failed";
+  message: string;
+  file?: string;
+}
+
+export interface JudgeReport {
+  generatedAt: string;
+  runId: string;
+  blueprintId: string;
+  inputs: {
+    programPath: string;
+    adapter: string;
+    workspaceMode: "worktree" | "root";
+  };
+  budget: ProgramBudget;
+  contextEvidence: {
+    contextPath: string;
+    repoMapFiles: string[];
+    workingSetFiles: string[];
+    historyEntries: number;
+  };
+  verificationResults: VerificationSummary;
+  changedFiles: string[];
+  issues: JudgeIssue[];
+  score: number;
+  judgeDecision: JudgeDecision;
+  promotionDecision: PromotionDecision;
+  evidenceRefs: string[];
+}
+
+export interface RunSessionSummary {
+  runId: string;
+  blueprintId: string;
+  programPath: string;
+  adapter: string;
+  workspacePath: string;
+  workspaceMode: "worktree" | "root";
+  startedAt: string;
+  finishedAt: string;
+  status: "accepted" | "rejected" | "blocked" | "failed" | "running";
+  changedFiles: string[];
+  execution: {
+    success: boolean;
+    output: string;
+    artifacts: string[];
+  };
+  verification: VerificationSummary;
+  judge: JudgeReport;
+  promotionDecision: PromotionDecision;
+  contextPath: string;
+  candidatePatchPath: string | null;
+  evidenceRefs: string[];
 }

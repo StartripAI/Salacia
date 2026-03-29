@@ -1,119 +1,148 @@
 # Salacia
 
-> **The Runtime for AI Coding Agents**
+> **The Harness Between Your Repo and Your Coding Agent**
 >
-> Your code runs on Node. Your AI agent runs on Salacia.
+> Give Claude Code, Codex, Cursor, Cline, or OpenCode a bounded context, a budget, and a judge.
 
-## 5 Seconds to Start
+## Quick Start
 
 ```bash
 npx salacia init
+salacia design
+salacia run
 ```
 
-## 1 Minute to Learn
+Then inspect the evidence:
 
 ```bash
-# Tell it what you want (natural language)
-npx salacia plan "add JWT authentication"
-
-# Dispatch to your AI coding agent
-npx salacia execute --adapter claude-code
-
-# Verify the result against the contract
-npx salacia validate
+salacia judge
+salacia trace
 ```
 
-## What Just Happened?
+## What Salacia Does
 
-1. **`plan`** — Salacia parsed your vibe into a Contract (what) + Spec (how) + Plan (steps), then pre-analyzed your codebase with fault localization
-2. **`execute`** — Dispatched to Claude Code with targeted context — the agent reads fewer files, wastes fewer tokens, and fixes bugs faster
-3. **`validate`** — Verified results against the contract, not just "it compiles"
+Salacia is not another coding agent. It is the runtime/harness that sits between your repository and your agent run:
 
-**Result:** Same model, same task — agents with Salacia solve **+6% more bugs** while using **fewer tokens** ([see benchmarks](#benchmarks)).
+1. **`program.md`** defines the goal, mutable surface, verification, and promotion policy.
+2. **`design`** compiles that into a machine-readable blueprint.
+3. **`run`** builds a `ContextPack`, dispatches the agent in a bounded workspace, and runs verification.
+4. **`judge`** decides whether the patch should be accepted, rejected, or blocked.
+5. **`trace`** gives you the full event log and artifacts for the run.
 
-## Why Salacia?
+## Three Killer Features
 
-Salacia is **not** another AI coding agent. It's the layer that makes your existing agents better:
+### 1. ContextPack
 
-| Without Salacia | With Salacia |
-|-----------------|-------------|
-| Agent searches entire repo | Agent reads 2-3 targeted files |
-| 10+ turns of trial and error | 3-5 focused turns |
-| Wastes tokens on wrong files | 93% accurate fault localization |
-| "It compiled" = done | Contract-verified correctness |
+Salacia builds a repository-aware context package for every run:
 
-## Benchmarks
+- ranked repo map
+- working set and snippets
+- recent run history
+- explicit guardrails
 
-Tested on **117 SWE-bench Verified tasks** across two models:
+The agent no longer has to rediscover your repository every time.
 
-| Metric | Value |
-|--------|-------|
-| Pass rate uplift | **+6pp** (56.4% → 62.4%) |
-| Win : Fallback ratio | **2.2 : 1** |
-| FL accuracy (Top-5) | **93%** |
-| Both models improved | ✅ Sonnet +6.9pp, Opus +3.3pp |
+### 2. JudgeLoop
 
-## CLI Reference
+Every run ends in a hard decision:
+
+- `accept`
+- `reject`
+- `blocked`
+
+This is not “looks good to me.” It is verification-backed promotion with automatic rollback/rejection behavior.
+
+### 3. Evidence-Native Harness
+
+Runtime, eval, and release gates all share the same evidence shape:
+
+- inputs
+- context evidence
+- verification results
+- judge decision
+- promotion decision
+- evidence refs
+
+That makes product runs, benchmarks, and release policy comparable.
+
+## How a Run Works
+
+```text
+program.md
+  -> blueprint
+  -> context pack
+  -> isolated run
+  -> verification
+  -> judge
+  -> promote / reject / block
+```
+
+Artifacts produced by a run:
+
+- `program.md`
+- `.salacia/blueprint.json`
+- `.salacia/context/<run-id>.json`
+- `.salacia/runs/<run-id>/events.ndjson`
+- `.salacia/runs/<run-id>/summary.json`
+- `.salacia/runs/<run-id>/judge.json`
+
+## Why This Is Different
+
+### Not another coding agent
+
+Salacia does not try to replace Claude Code, Codex, Cursor, or other agents. It gives them a better execution environment.
+
+### Not just an IDE plugin
+
+IDE-native bridges are supported, but the core abstraction is the harness runtime:
+
+- control plane
+- context plane
+- judge loop
+- evidence model
+
+### Not benchmark-only infrastructure
+
+Benchmarks and superiority audits are first-class, but they reuse the same runtime evidence model instead of living in a separate universe.
+
+## CLI Surface
 
 ```bash
-salacia init                    # Initialize .salacia in your repo
-salacia plan "<vibe>"           # Vibe → Contract + Spec + Plan
-salacia execute --adapter <a>   # Dispatch to agent
-salacia validate                # Verify against contract
-salacia status                  # Current state
-salacia doctor                  # Compatibility check
-salacia snapshot                # Create rollback point
-salacia rollback [id]           # Revert to snapshot
-salacia converge --stage <s>    # Run advisor convergence
-salacia adapters list           # Show available adapters
-salacia benchmark <action>      # Run benchmarks
-salacia mcp-server              # Start MCP server
+salacia init
+salacia design
+salacia run [--adapter <name>]
+salacia judge [--run <id>]
+salacia trace [--run <id>]
+salacia eval <action>
 ```
 
-## Adapters
+Legacy v0.1 commands such as `plan`, `execute`, and `validate` remain available only as transitional surfaces.
 
-| Target | Kind | Status |
-|--------|------|--------|
-| claude-code | executor | GA |
-| codex | executor | GA |
-| opencode | executor | beta |
-| cursor | IDE bridge | bridge |
-| cline | IDE bridge | bridge |
-| vscode | IDE bridge | bridge |
-| antigravity | IDE bridge | bridge |
+## Works With
 
-## Install
-
-```bash
-# Use without install
-npx salacia init
-
-# Or install globally
-npm i -g salacia
-
-# Or from source
-git clone https://github.com/StartripAI/Salacia.git
-cd Salacia && npm install && npm run build
-```
+- Claude Code
+- Codex
+- OpenCode
+- Cursor
+- Cline
+- VS Code bridges
+- Antigravity
 
 ## Architecture
 
-```
-Interaction Layer    CLI, IDE bridges, CI hooks
-Kernel Layer         Contract compiler, plan engine, convergence
-Guardian Layer       Drift detector, snapshot, rollback, verification
-Adapter Layer        Unified bridge adapters for executors/IDEs
-Protocol Layer       MCP gateway + ACP (A2A + subprocess)
-Persistence          .salacia/contracts, specs, plans, journal, snapshots
-```
+Salacia v0.2 is organized around four planes:
+
+- `control plane`: `program.md` -> blueprint
+- `context plane`: repo map, working set, history, guardrails
+- `harness plane`: run session, verification, judge, promotion
+- `eval plane`: benchmark, superiority, release gate consumption
 
 ## Links
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Operations](docs/OPERATIONS.md)
 - [Adapters](docs/ADAPTERS.md)
 - [Protocols](docs/PROTOCOLS.md)
-- [Security](SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
 
 ## License
 

@@ -1,51 +1,111 @@
 # Salacia Architecture
 
-## Layered Model
+## Core Model
 
-1. Interaction Layer
-- CLI commands
-- IDE bridges (VS Code, Cursor, Cline, Antigravity)
-- CI hooks and release gates
+Salacia v0.2 is a harness/runtime for AI coding agents. The primary execution model is:
 
-2. Kernel Layer
-- Contract compiler (YAML + schema validation)
-- Plan engine (contract to executable steps)
-- Prompt compiler (Intent IR + diagnostics + auto-correct)
-- Metamorphic prompt tester
-- Convergence engine (3-advisor majority)
-- Execution orchestrator
+```text
+program.md -> blueprint -> context pack -> run session -> verification -> judge -> promotion
+```
 
-3. Guardian Layer
-- Drift detection
-- Consistency safety net (feature fingerprint / revert detection)
-- Snapshot/rollback
-- Verification loop
-- Progress tracker
-- Evidence store
+## Four Planes
 
-4. Adapter Layer
-- Executor adapters (Claude/Codex/OpenCode)
-- IDE bridge adapters (VS Code/Cursor/Cline/Antigravity)
-- Unified bridge lifecycle: `prepare -> dispatch -> collect -> validate -> evidence`
+### 1. Control Plane
 
-5. Protocol Layer
-- MCP gateway and MCP server
-- ACP A2A dispatcher
-- ACP OpenCode subprocess bridge
+Primary artifact:
 
-6. Persistence Layer
-- `.salacia/contracts`
-- `.salacia/specs`
-- `.salacia/plans`
-- `.salacia/journal`
-- `.salacia/snapshots`
-- `.salacia/progress`
+- `program.md`
 
-## Core Runtime Flow
+Compiled output:
 
-1. `plan`: vibe -> prompt compile -> contract/spec/plan artifacts.
-2. `converge(plan)`: advisor majority gate.
-3. `execute`: adapter dispatch with per-step evidence + consistency guard.
-4. `verify`: command verification + evidence.
-5. `converge(exec)`: post-verify majority gate.
-6. release gate checks all policy constraints.
+- `.salacia/blueprint.json`
+
+Responsibilities:
+
+- capture intent
+- define mutable/protected surface
+- define verification commands
+- define budget and promotion policy
+
+### 2. Context Plane
+
+Primary artifact:
+
+- `.salacia/context/<run-id>.json`
+
+Responsibilities:
+
+- build ranked repo map
+- build working set/snippets
+- summarize recent run history
+- attach explicit guardrails
+
+The context plane is budgeted. It does not attempt to stream the entire repository into the agent.
+
+### 3. Harness Plane
+
+Primary artifacts:
+
+- `.salacia/runs/<run-id>/events.ndjson`
+- `.salacia/runs/<run-id>/summary.json`
+- `.salacia/runs/<run-id>/judge.json`
+- `.salacia/runs/<run-id>/candidate.patch`
+
+Responsibilities:
+
+- prepare isolated workspace
+- dispatch agent
+- collect patch
+- run verification
+- produce `accept | reject | blocked`
+- promote or revert
+
+### 4. Eval Plane
+
+Responsibilities:
+
+- benchmark runs
+- superiority profiles
+- release gate consumption
+- common evidence model
+
+The eval plane reuses runtime evidence rather than inventing a separate reporting universe.
+
+## Run Lifecycle
+
+Every `salacia run` follows the same phases:
+
+1. `compile_program`
+2. `build_context`
+3. `prepare_workspace`
+4. `dispatch_agent`
+5. `collect_patch`
+6. `run_verification`
+7. `run_judge`
+8. `promote_or_revert`
+9. `finalize_session`
+
+## Judge Semantics
+
+Judge results are fixed:
+
+- `accept`
+- `reject`
+- `blocked`
+
+Rules:
+
+- `accept`: verification passed and writes stayed within mutable surface
+- `reject`: verification or execution failed
+- `blocked`: protected paths or out-of-scope writes were touched, or promotion could not be safely applied
+
+## Why This Shape
+
+This architecture deliberately separates:
+
+- the human control artifact (`program.md`)
+- the agent input (`ContextPack`)
+- the execution trace (`RunSession`)
+- the decision artifact (`JudgeReport`)
+
+That separation makes Salacia suitable for both day-to-day coding runs and evidence-backed eval/release workflows.

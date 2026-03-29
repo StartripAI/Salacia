@@ -7,6 +7,9 @@ const RUNS_DIR_NAME = "runs";
 export interface SalaciaPaths {
   root: string;
   salacia: string;
+  blueprint: string;
+  context: string;
+  runs: string;
   contracts: string;
   specs: string;
   plans: string;
@@ -19,6 +22,12 @@ export interface RunPaths {
   root: string;
   runId: string;
   dir: string;
+  blueprint: string;
+  context: string;
+  events: string;
+  summary: string;
+  judge: string;
+  candidatePatch: string;
   intentIr: string;
   plan: string;
   executionDir: string;
@@ -31,7 +40,7 @@ export interface RunPaths {
 }
 
 function runsRoot(root: string): string {
-  return path.join(getSalaciaPaths(root).journal, RUNS_DIR_NAME);
+  return getSalaciaPaths(root).runs;
 }
 
 export function createRunId(): string {
@@ -47,6 +56,12 @@ export function getRunPaths(root: string, runId: string): RunPaths {
     root,
     runId,
     dir,
+    blueprint: path.join(dir, "blueprint.json"),
+    context: path.join(getSalaciaPaths(root).context, `${runId}.json`),
+    events: path.join(dir, "events.ndjson"),
+    summary: path.join(dir, "summary.json"),
+    judge: path.join(dir, "judge.json"),
+    candidatePatch: path.join(dir, "candidate.patch"),
     intentIr: path.join(dir, "intent.ir.json"),
     plan: path.join(dir, "plan.json"),
     executionDir,
@@ -96,6 +111,9 @@ export function getSalaciaPaths(root = process.cwd()): SalaciaPaths {
   return {
     root,
     salacia,
+    blueprint: path.join(salacia, "blueprint.json"),
+    context: path.join(salacia, "context"),
+    runs: path.join(salacia, RUNS_DIR_NAME),
     contracts: path.join(salacia, "contracts"),
     specs: path.join(salacia, "specs"),
     plans: path.join(salacia, "plans"),
@@ -108,6 +126,8 @@ export function getSalaciaPaths(root = process.cwd()): SalaciaPaths {
 export async function ensureSalaciaDirs(root = process.cwd()): Promise<SalaciaPaths> {
   const paths = getSalaciaPaths(root);
   await fs.mkdir(paths.salacia, { recursive: true });
+  await fs.mkdir(paths.context, { recursive: true });
+  await fs.mkdir(paths.runs, { recursive: true });
   await fs.mkdir(paths.contracts, { recursive: true });
   await fs.mkdir(paths.specs, { recursive: true });
   await fs.mkdir(paths.plans, { recursive: true });

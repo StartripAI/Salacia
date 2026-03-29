@@ -54,6 +54,7 @@ describe("cli command contract", () => {
     const help = `${res.stdout}\n${res.stderr}`;
     const required = [
       "init",
+      "design",
       "forge",
       "plan",
       "prompt",
@@ -62,6 +63,9 @@ describe("cli command contract", () => {
       "verify",
       "guard",
       "execute",
+      "run",
+      "judge",
+      "trace",
       "snapshot",
       "rollback",
       "status",
@@ -70,6 +74,7 @@ describe("cli command contract", () => {
       "doctor",
       "audit",
       "benchmark",
+      "eval",
       "mcp-server",
       "mcp-describe"
     ];
@@ -177,6 +182,33 @@ describe("cli command contract", () => {
 
   it("returns structured error for benchmark verify without run id", async () => {
     const res = await runCli(["benchmark", "verify", "--json"]);
+    expect(res.code).not.toBe(0);
+    const payload = parseJsonOutput(res.stdout) as { ok: boolean; error: string };
+    expect(payload.ok).toBe(false);
+    expect(payload.error).toContain("requires --run");
+  });
+
+  it("compiles program.md through design command", async () => {
+    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "salacia-cli-design-"));
+    const initRes = await runCli(["init", "--json"], cwd);
+    expect(initRes.code).toBe(0);
+
+    const designRes = await runCli(["design", "--json"], cwd);
+    expect(designRes.code).toBe(0);
+    const payload = parseJsonOutput(designRes.stdout) as {
+      ok: boolean;
+      programPath: string;
+      blueprintPath: string;
+      blueprint: { id: string; goal: string };
+    };
+    expect(payload.ok).toBe(true);
+    expect(payload.blueprint.id).toContain("blueprint-");
+    const stat = await fs.stat(payload.blueprintPath);
+    expect(stat.isFile()).toBe(true);
+  });
+
+  it("surfaces eval superiority through the unified eval command", async () => {
+    const res = await runCli(["eval", "verify", "--json"]);
     expect(res.code).not.toBe(0);
     const payload = parseJsonOutput(res.stdout) as { ok: boolean; error: string };
     expect(payload.ok).toBe(false);
