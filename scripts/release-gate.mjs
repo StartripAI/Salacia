@@ -87,6 +87,42 @@ async function runPromptMetamorphicCheck(cwd) {
   };
 }
 
+async function loadJudgeReport(cwd, runId, judgePath) {
+  const target = judgePath
+    ? path.resolve(cwd, judgePath)
+    : runId
+      ? path.join(cwd, ".salacia", "runs", runId, "judge.json")
+      : null;
+  if (!target) {
+    return null;
+  }
+
+  const raw = await fs.readFile(target, "utf8").catch(() => "");
+  if (!raw) {
+    return {
+      path: target,
+      ok: false,
+      error: "judge report not found"
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    const ok = parsed?.judgeDecision === "accept" && parsed?.promotionDecision === "accept";
+    return {
+      path: target,
+      ok,
+      report: parsed
+    };
+  } catch (error) {
+    return {
+      path: target,
+      ok: false,
+      error: error.message
+    };
+  }
+}
+
 function parseArg(name, fallback = undefined) {
   const index = process.argv.indexOf(name);
   if (index === -1) return fallback;
@@ -151,6 +187,8 @@ async function main() {
   const cwd = process.cwd();
   const planPath = parseArg("--plan");
   const execPath = parseArg("--exec");
+  const runId = parseArg("--run");
+  const judgePath = parseArg("--judge");
   const requireConvergence = hasFlag("--require-convergence");
   const externalAdvisors = !hasFlag("--no-external");
 
@@ -161,7 +199,7 @@ async function main() {
   checks.push(await runChecked("smoke", "npm", ["run", "smoke"], { cwd }));
   checks.push(await runSecretScan(cwd));
   checks.push(await runPromptMetamorphicCheck(cwd));
-  checks.push(await runChecked("superiority-audit", "node", ["dist/cli/index.js", "audit", "superiority", "--json"], { cwd }));
+  checks.push(await runChecked("superiority-eval", "node", ["dist/cli/index.js", "eval", "superiority", "--json"], { cwd }));
 
   const convergence = {
     plan: null,
@@ -191,11 +229,23 @@ async function main() {
 
   checks.push(...convergeChecks);
 
+  const runtimeJudge = await loadJudgeReport(cwd, runId, judgePath);
+  if (runtimeJudge) {
+    checks.push({
+      name: "runtime-judge",
+      passed: runtimeJudge.ok,
+      details: runtimeJudge.ok
+        ? `Runtime judge accepted: ${runtimeJudge.path}`
+        : `Runtime judge failed: ${runtimeJudge.error ?? runtimeJudge.path}`
+    });
+  }
+
   const allPassed = checks.every((c) => c.passed);
   const report = {
     generatedAt: new Date().toISOString(),
     checks,
     convergence,
+    runtimeJudge: runtimeJudge?.report ?? null,
     overallPassed: allPassed
   };
 

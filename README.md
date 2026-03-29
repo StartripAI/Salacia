@@ -1,175 +1,148 @@
 # Salacia
 
-> **Harness Engineering for AI Coding Agents**
+> **The Harness Between Your Repo and Your Coding Agent**
 >
-> Plan mode lets the model think. Salacia lets the model **see**.
-
-Your AI coding agent is smart. But without the right context, it's guessing.
-Salacia wraps around **Codex, Claude Code, Aider, or Cursor** — injecting deterministic pre-computation *before* the model thinks, and post-verification *after* it writes.
-
-**Same model. Same task. Better results.**
+> Give Claude Code, Codex, Cursor, Cline, or OpenCode a bounded context, a budget, and a judge.
 
 ## Quick Start
 
 ```bash
-npx salacia harness
+npx salacia init
+salacia design
+salacia run
 ```
 
-That's it. One command to install, detect your environment, and scaffold your project.
-
-## Why Salacia?
-
-AI coding agents have a **plan mode** — they read files, reason, then edit. But:
-
-- They **guess** which files to read in a 100K-line codebase
-- They have no **scope guardrails** — one prompt and they refactor 30 files
-- They **fail silently** — no rollback, no retry, no second chance
-
-Salacia fixes this with 5 deterministic layers, wrapping your existing agent:
-
-| Without Salacia | With Salacia |
-|-----------------|-------------|
-| Model guesses target files | ripgrep search → PageRank ranking 🎯 |
-| Limited to context window | Tree-sitter AST → Symbol graph 🗺️ |
-| Model self-regulates scope | Contract + protected paths 📋 |
-| No failure recovery | Snapshot → Rollback → Retry 🔄 |
-| Probabilistic every time | Pre-pass is fully deterministic ✅ |
-
-## Benchmarks
-
-**SWE-bench Verified** — 500 real GitHub issues, deterministic test evaluation:
-
-| Metric | Codex 5.4 Pro (bare) | + Salacia |
-|--------|---------------------|-----------|
-| Resolve rate | 71.6% | **79.2%** (+7.6pp) |
-| Pass@500 | 74.2% | **83.8%** (+9.6pp) |
-| Extra issues resolved | — | **+38** |
-| Saved by retry loop | — | **12** |
-| Regressions | — | **0** |
-
-> Real example: `pylint-dev/pylint-7080` (24,770-char issue)
-> - **Bare →** empty patch (too complex, model didn't know where to start)
-> - **Salacia →** ripgrep localized 3 files → symbol graph → correct patch → **tests pass** ✅
-
-## How It Works
-
-```
-┌─────────────────────────────────────────────┐
-│  Salacia Harness                            │
-│                                             │
-│  ① Pre-compute Context                      │
-│     Fault Localization (ripgrep + PageRank)  │
-│     Repo Map (Tree-sitter AST)              │
-│     Intent IR (goals, constraints, risks)   │
-│     Execution Contract (scope + guardrails) │
-│                                             │
-│  ② Model Runs (your agent, unchanged)       │
-│     Codex / Claude Code / Aider / Cursor    │
-│     Plan mode still works — enhanced by ①   │
-│                                             │
-│  ③ Verify & Retry                           │
-│     Local test validation                   │
-│     Contract compliance check               │
-│     Snapshot rollback if failed              │
-│     Re-prompt with failure context           │
-└─────────────────────────────────────────────┘
-```
-
-**Salacia + Plan Mode are additive, not competing.** Your agent keeps its reasoning ability.
-Salacia just makes sure it starts with the right files and gets a second chance when it slips.
-
-## CLI Reference
+Then inspect the evidence:
 
 ```bash
-salacia harness                 # One-line setup: install + detect + scaffold
-salacia init                    # Initialize .salacia in your repo
-salacia plan "<vibe>"           # Vibe → Contract + Spec + Plan
-salacia execute --adapter <a>   # Dispatch to agent
-salacia validate                # Verify against contract
-salacia status                  # Current state
-salacia doctor                  # Compatibility check
-salacia snapshot                # Create rollback point
-salacia rollback [id]           # Revert to snapshot
-salacia converge --stage <s>    # Run advisor convergence
-salacia benchmark run           # Run SWE-bench or internal benchmarks
-salacia mcp-server              # Start MCP server
+salacia judge
+salacia trace
 ```
 
-## Adapters
+## What Salacia Does
 
-| Target | Kind | Status |
-|--------|------|--------|
-| codex | executor | GA |
-| claude-code | executor | GA |
-| aider | executor | GA |
-| opencode | executor | beta |
-| cursor | IDE bridge | bridge |
-| cline | IDE bridge | bridge |
-| vscode | IDE bridge | bridge |
-| antigravity | IDE bridge | bridge |
+Salacia is not another coding agent. It is the runtime/harness that sits between your repository and your agent run:
 
-## Install
+1. **`program.md`** defines the goal, mutable surface, verification, and promotion policy.
+2. **`design`** compiles that into a machine-readable blueprint.
+3. **`run`** builds a `ContextPack`, dispatches the agent in a bounded workspace, and runs verification.
+4. **`judge`** decides whether the patch should be accepted, rejected, or blocked.
+5. **`trace`** gives you the full event log and artifacts for the run.
+
+## Three Killer Features
+
+### 1. ContextPack
+
+Salacia builds a repository-aware context package for every run:
+
+- ranked repo map
+- working set and snippets
+- recent run history
+- explicit guardrails
+
+The agent no longer has to rediscover your repository every time.
+
+### 2. JudgeLoop
+
+Every run ends in a hard decision:
+
+- `accept`
+- `reject`
+- `blocked`
+
+This is not “looks good to me.” It is verification-backed promotion with automatic rollback/rejection behavior.
+
+### 3. Evidence-Native Harness
+
+Runtime, eval, and release gates all share the same evidence shape:
+
+- inputs
+- context evidence
+- verification results
+- judge decision
+- promotion decision
+- evidence refs
+
+That makes product runs, benchmarks, and release policy comparable.
+
+## How a Run Works
+
+```text
+program.md
+  -> blueprint
+  -> context pack
+  -> isolated run
+  -> verification
+  -> judge
+  -> promote / reject / block
+```
+
+Artifacts produced by a run:
+
+- `program.md`
+- `.salacia/blueprint.json`
+- `.salacia/context/<run-id>.json`
+- `.salacia/runs/<run-id>/events.ndjson`
+- `.salacia/runs/<run-id>/summary.json`
+- `.salacia/runs/<run-id>/judge.json`
+
+## Why This Is Different
+
+### Not another coding agent
+
+Salacia does not try to replace Claude Code, Codex, Cursor, or other agents. It gives them a better execution environment.
+
+### Not just an IDE plugin
+
+IDE-native bridges are supported, but the core abstraction is the harness runtime:
+
+- control plane
+- context plane
+- judge loop
+- evidence model
+
+### Not benchmark-only infrastructure
+
+Benchmarks and superiority audits are first-class, but they reuse the same runtime evidence model instead of living in a separate universe.
+
+## CLI Surface
 
 ```bash
-# Zero-install (recommended)
-npx salacia harness
-
-# Or install globally
-npm i -g salacia
-
-# Or from source
-git clone https://github.com/StartripAI/Salacia.git
-cd Salacia && npm install && npm run build
+salacia init
+salacia design
+salacia run [--adapter <name>]
+salacia judge [--run <id>]
+salacia trace [--run <id>]
+salacia eval <action>
 ```
+
+Legacy v0.1 commands such as `plan`, `execute`, and `validate` remain available only as transitional surfaces.
+
+## Works With
+
+- Claude Code
+- Codex
+- OpenCode
+- Cursor
+- Cline
+- VS Code bridges
+- Antigravity
 
 ## Architecture
 
-```
-Interaction Layer    CLI, IDE bridges, CI hooks
-Kernel Layer         Contract compiler, plan engine, convergence
-Guardian Layer       Drift detector, snapshot, rollback, verification
-Harness Layer        Fault localization, repo map, intent IR, contract
-Adapter Layer        Unified bridge adapters for executors/IDEs
-Protocol Layer       MCP gateway + ACP (A2A + subprocess)
-Benchmark Layer      SWE-bench campaign runner, internal probes
-Persistence          .salacia/contracts, specs, plans, journal, snapshots
-```
+Salacia v0.2 is organized around four planes:
 
-## Project Structure
-
-```
-src/
-  cli/index.ts          # CLI entry point
-  core/
-    auto-detect.ts      # Environment auto-detection
-    install.ts          # Dependency installer
-    run.ts              # Scenario runner
-    scenarios.ts        # Harness scenario definitions
-    memory.ts           # Session memory
-scripts/
-  public-benchmark-runner.mjs   # SWE-bench campaign runner
-  fault-localizer.mjs           # ripgrep + PageRank fault localization
-  tree-sitter-repo-map.mjs      # AST-based symbol graph
-  intent-sublimator.mjs         # Issue → structured intent IR
-  contract-compiler.mjs         # Execution contract generator
-  repo-context-builder.mjs      # Repository context builder
-  local-test-runner.mjs         # Local test plan + validation
-  benchmark-snapshot.mjs        # Git snapshot for rollback
-docs/
-  salacia-harness.html          # Interactive marketing page (bilingual)
-  ARCHITECTURE.md
-  ADAPTERS.md
-  PROTOCOLS.md
-```
+- `control plane`: `program.md` -> blueprint
+- `context plane`: repo map, working set, history, guardrails
+- `harness plane`: run session, verification, judge, promotion
+- `eval plane`: benchmark, superiority, release gate consumption
 
 ## Links
 
-- [Interactive Demo](docs/salacia-harness.html) — bilingual harness comparison page
 - [Architecture](docs/ARCHITECTURE.md)
+- [Operations](docs/OPERATIONS.md)
 - [Adapters](docs/ADAPTERS.md)
 - [Protocols](docs/PROTOCOLS.md)
-- [Security](SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
 
 ## License
 

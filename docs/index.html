@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salacia — The Runtime for AI Coding Agents</title>
+    <title>Salacia — The Harness Between Your Repo and Your Coding Agent</title>
     <meta name="description"
-        content="Stop wasting tokens on bad prompts. Salacia makes any AI coding agent smarter, faster, and cheaper.">
+        content="Salacia is the harness between your repository and your coding agent. It builds context, runs with a judge, and promotes only verified patches.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
@@ -26,116 +26,109 @@
     <nav class="glass">
         <span class="logo">Salacia</span>
         <a href="#how" data-i18n="nav_how">How It Works</a>
-        <a href="#data" data-i18n="nav_data">Benchmarks</a>
+        <a href="#data" data-i18n="nav_data">Capabilities</a>
         <a href="https://github.com/StartripAI/Salacia">GitHub</a>
         <button class="lang-btn" onclick="toggleLang()" id="langToggle">中文</button>
     </nav>
 
     <section class="hero">
-        <span class="badge" data-i18n="badge">✦ SWE-bench Verified · Claude Opus 4.6 & Sonnet 4.6</span>
-        <h1><span class="gradient" data-i18n="hero_gradient">Stop wasting tokens</span><br><span
-                data-i18n="hero_rest">on bad prompts.</span></h1>
-        <p class="subtitle" data-i18n="subtitle">Salacia is the runtime that makes any AI coding agent smarter, faster,
-            and cheaper.</p>
+        <span class="badge" data-i18n="badge">✦ ContextPack · JudgeLoop · Evidence-Native Harness</span>
+        <h1><span class="gradient" data-i18n="hero_gradient">Give your coding agent</span><br><span
+                data-i18n="hero_rest">a real harness.</span></h1>
+        <p class="subtitle" data-i18n="subtitle">Salacia builds context, runs the agent in a bounded workspace, judges
+            the result, and only then promotes the patch.</p>
         <div class="hero-code glass" id="copyBtn">
             <span class="prompt">$</span>
             <span class="cmd">npx salacia init</span>
             <span class="copy-hint" data-i18n="copy">click to copy</span>
         </div>
-        <p class="hero-hint" data-i18n="compat">Works with Claude Code · Cursor · Codex · Cline · Windsurf · Antigravity
-        </p>
+        <p class="hero-hint" data-i18n="compat">Claude Code · Codex · Cursor · Cline · OpenCode · Antigravity</p>
     </section>
 
     <div class="container" id="data">
         <div class="stats">
             <div class="stat glass">
-                <div class="stat-value purple" data-i18n="stat1_val">93.4%</div>
-                <div class="stat-label" data-i18n="stat1_label">FL Top-5 Recall</div>
+                <div class="stat-value purple" data-i18n="feature1_val">ContextPack</div>
+                <div class="stat-label" data-i18n="feature1_label">repo map · working set · history · guardrails</div>
             </div>
             <div class="stat glass">
-                <div class="stat-value green" data-i18n="stat2_val">+6.0pp</div>
-                <div class="stat-label" data-i18n="stat2_label">Paired A/B Pass Rate Uplift</div>
+                <div class="stat-value green" data-i18n="feature2_val">JudgeLoop</div>
+                <div class="stat-label" data-i18n="feature2_label">accept · reject · blocked</div>
             </div>
             <div class="stat glass">
-                <div class="stat-value pink" data-i18n="stat3_val">p&lt;0.01</div>
-                <div class="stat-label" data-i18n="stat3_label">McNemar's Test Significance</div>
-            </div>
-            <div class="stat glass">
-                <div class="stat-value mint" data-i18n="stat4_val">500+</div>
-                <div class="stat-label" data-i18n="stat4_label">SWE-bench Tasks Evaluated</div>
+                <div class="stat-value pink" data-i18n="feature3_val">Evidence</div>
+                <div class="stat-label" data-i18n="feature3_label">runtime · eval · release gate share one report shape</div>
             </div>
         </div>
     </div>
 
-    <section class="section" id="how">
+    <section class="section">
         <div class="container">
-            <p class="section-label" data-i18n="problem_label">The Problem</p>
-            <h2 class="section-title" data-i18n="problem_title">Your AI agent is flying blind.</h2>
-            <p class="section-subtitle" data-i18n="problem_subtitle">Salacia gives it a map, a compass, and a
-                verification contract.</p>
+            <p class="section-label" data-i18n="problem_label">The Shift</p>
+            <h2 class="section-title" data-i18n="problem_title">This is not another coding agent.</h2>
+            <p class="section-subtitle" data-i18n="problem_subtitle">Salacia is the harness between your repository and
+                the agent you already use.</p>
             <div class="comparison">
                 <div class="comparison-card before">
-                    <h3 data-i18n="without">Without Salacia</h3>
+                    <h3 data-i18n="without">Agent alone</h3>
                     <ul>
-                        <li><span class="icon">🔍</span><span data-i18n="w1">Agent searches the entire repo</span></li>
-                        <li><span class="icon">🔄</span><span data-i18n="w2">10+ turns of trial and error</span></li>
-                        <li><span class="icon">💸</span><span data-i18n="w3">Wastes tokens on wrong files</span></li>
-                        <li><span class="icon">❓</span><span data-i18n="w4">"It compiled" = done</span></li>
+                        <li><span class="icon">🔍</span><span data-i18n="w1">It must rediscover the repo every run</span></li>
+                        <li><span class="icon">🔄</span><span data-i18n="w2">Execution and judgment are mixed together</span></li>
+                        <li><span class="icon">❓</span><span data-i18n="w3">“Looks good” becomes the promotion policy</span></li>
+                        <li><span class="icon">🧾</span><span data-i18n="w4">Benchmarks and product runs speak different languages</span></li>
                     </ul>
                 </div>
                 <div class="comparison-card enhanced glass">
-                    <h3 data-i18n="with">With Salacia</h3>
+                    <h3 data-i18n="with">Agent + Salacia</h3>
                     <ul>
-                        <li><span class="icon">🎯</span><span data-i18n="s1">Agent reads 2-3 targeted files</span></li>
-                        <li><span class="icon">⚡</span><span data-i18n="s2">3-5 focused turns</span></li>
-                        <li><span class="icon">📍</span><span data-i18n="s3">93% accurate fault localization</span></li>
-                        <li><span class="icon">✔️</span><span data-i18n="s4">Contract-verified correctness</span></li>
+                        <li><span class="icon">🗺️</span><span data-i18n="s1">ContextPack gives it a bounded map</span></li>
+                        <li><span class="icon">⚖️</span><span data-i18n="s2">JudgeLoop decides accept/reject/blocked</span></li>
+                        <li><span class="icon">🧪</span><span data-i18n="s3">Verification is mandatory, not optional</span></li>
+                        <li><span class="icon">📦</span><span data-i18n="s4">Runtime, eval, and release reuse the same evidence</span></li>
                     </ul>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="section">
+    <section class="section" id="how">
         <div class="container">
             <p class="section-label" data-i18n="how_label">How It Works</p>
-            <h2 class="section-title" data-i18n="how_title">Four steps. Two minutes.</h2>
-            <p class="section-subtitle" data-i18n="how_subtitle">Install once, then add one layer before your AI edits
-                code.</p>
+            <h2 class="section-title" data-i18n="how_title">Four steps. One harness.</h2>
+            <p class="section-subtitle" data-i18n="how_subtitle">The public flow is now `init -> design -> run ->
+                judge/trace`.</p>
             <div class="steps steps-4">
                 <div class="step glass">
-                    <div class="step-num">0</div>
-                    <h3 data-i18n="step0_title">Install</h3>
-                    <p data-i18n="step0_desc">One command to install. Or skip and use npx directly.</p>
-                    <code>npm install -g salacia</code>
-                </div>
-                <div class="step glass">
                     <div class="step-num">1</div>
-                    <h3 data-i18n="step1_title">Plan</h3>
-                    <p data-i18n="step1_desc">Describe the bug in plain English. Salacia analyzes your project and
-                        locates the files to fix.</p>
-                    <code>salacia plan "fix the auth bug"</code>
+                    <h3 data-i18n="step0_title">Write `program.md`</h3>
+                    <p data-i18n="step0_desc">Declare the goal, mutable surface, verification, and promotion policy.</p>
+                    <code>npx salacia init</code>
                 </div>
                 <div class="step glass">
                     <div class="step-num">2</div>
-                    <h3 data-i18n="step2_title">Execute</h3>
-                    <p data-i18n="step2_desc">Hand the localized context to your AI agent. It edits with a map, not a
-                        blindfold.</p>
-                    <code>salacia execute --adapter claude-code</code>
+                    <h3 data-i18n="step1_title">Build context</h3>
+                    <p data-i18n="step1_desc">Compile the program into a blueprint and build a bounded ContextPack.</p>
+                    <code>salacia design</code>
                 </div>
                 <div class="step glass">
                     <div class="step-num">3</div>
-                    <h3 data-i18n="step3_title">Validate</h3>
-                    <p data-i18n="step3_desc">Run tests automatically. Not "I think it works" — tests actually pass.</p>
-                    <code>salacia validate</code>
+                    <h3 data-i18n="step2_title">Run the agent</h3>
+                    <p data-i18n="step2_desc">Dispatch the agent in an isolated workspace with the generated context.</p>
+                    <code>salacia run</code>
+                </div>
+                <div class="step glass">
+                    <div class="step-num">4</div>
+                    <h3 data-i18n="step3_title">Judge and inspect</h3>
+                    <p data-i18n="step3_desc">Accept, reject, or block the patch, then inspect the trace and evidence.</p>
+                    <code>salacia judge && salacia trace</code>
                 </div>
             </div>
         </div>
     </section>
 
     <section class="cta">
-        <h2 id="ctaTitle">Your code runs on Node.<br>Your AI agent runs on <span class="purple">Salacia</span>.</h2>
-        <p data-i18n="cta_desc">One command. Apache 2.0 licensed. Works with any agent.</p>
+        <h2 id="ctaTitle">Your repo stays the source of truth.<br>Your agent gets a <span class="purple">harness</span>.</h2>
+        <p data-i18n="cta_desc">Open source. Apache 2.0. Built for coding agents and the teams that run them.</p>
         <div class="cta-buttons">
             <a href="https://github.com/StartripAI/Salacia" class="btn btn-primary" data-i18n="cta_gh">⭐ Star on
                 GitHub</a>

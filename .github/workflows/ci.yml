@@ -40,3 +40,70 @@ jobs:
 
       - name: Secret scan
         run: node scripts/secret-scan.mjs
+
+      - name: Set advisor mode for pull requests
+        if: github.event_name == 'pull_request'
+        id: advisor-mode-pr
+        run: |
+          node -e "const fs=require('node:fs'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'enabled=false\nmode=skip\n');"
+
+      - name: Detect advisor mode for trusted events
+        if: github.event_name != 'pull_request'
+        id: advisor-mode-trusted
+        env:
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          node -e "const fs=require('node:fs'); const has=Object.values({ANTHROPIC_AUTH_TOKEN:process.env.ANTHROPIC_AUTH_TOKEN,GEMINI_API_KEY:process.env.GEMINI_API_KEY,GOOGLE_API_KEY:process.env.GOOGLE_API_KEY,OPENAI_API_KEY:process.env.OPENAI_API_KEY}).some((value)=>Boolean((value||'').trim())); fs.appendFileSync(process.env.GITHUB_OUTPUT, `enabled=${has}\nmode=${has?'real':'skip'}\n`);"
+
+      - name: Finalize advisor mode
+        id: advisor-mode
+        env:
+          PR_ENABLED: ${{ steps.advisor-mode-pr.outputs.enabled }}
+          PR_MODE: ${{ steps.advisor-mode-pr.outputs.mode }}
+          TRUSTED_ENABLED: ${{ steps.advisor-mode-trusted.outputs.enabled }}
+          TRUSTED_MODE: ${{ steps.advisor-mode-trusted.outputs.mode }}
+        run: |
+          node -e "const fs=require('node:fs'); const enabled=(process.env.TRUSTED_ENABLED||process.env.PR_ENABLED||'false').trim()||'false'; const mode=(process.env.TRUSTED_MODE||process.env.PR_MODE||'skip').trim()||'skip'; fs.appendFileSync(process.env.GITHUB_OUTPUT, `enabled=${enabled}\nmode=${mode}\n`);"
+
+      - name: Report advisor mode
+        run: |
+          echo "Advisor mode: ${{ steps.advisor-mode.outputs.mode }}"
+
+      - name: Install real LLM CLIs
+        if: steps.advisor-mode.outputs.enabled == 'true'
+        run: npm i -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex
+
+      - name: Validate real LLM prerequisites
+        if: steps.advisor-mode.outputs.enabled == 'true'
+        env:
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          node -e "const {execSync}=require('node:child_process'); const hasCmd=(cmd)=>{try{execSync(cmd+' --help',{stdio:'pipe'}); return true;}catch{return false;}}; const hasClaude=hasCmd('claude') && Boolean((process.env.ANTHROPIC_AUTH_TOKEN||'').trim()); const hasGemini=hasCmd('gemini') && Boolean((process.env.GEMINI_API_KEY||process.env.GOOGLE_API_KEY||'').trim()); const hasOpenAI=(hasCmd('chatgpt')||hasCmd('codex')) && Boolean((process.env.OPENAI_API_KEY||'').trim()); if(!(hasClaude||hasGemini||hasOpenAI)){throw new Error('No ready LLM provider. Need at least one: claude+ANTHROPIC_AUTH_TOKEN | gemini+GEMINI_API_KEY | (chatgpt|codex)+OPENAI_API_KEY');}"
+
+      - name: E2E fullflow real
+        if: steps.advisor-mode.outputs.enabled == 'true'
+        env:
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: npm run test:e2e:fullflow:real
+
+      - name: E2E failures real
+        if: steps.advisor-mode.outputs.enabled == 'true'
+        env:
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: npm run test:e2e:failures:real
+
+      - name: Skip real LLM E2E
+        if: steps.advisor-mode.outputs.enabled != 'true'
+        run: echo "Skipping real LLM E2E because this event has no configured provider secret."

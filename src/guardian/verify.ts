@@ -1,22 +1,9 @@
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
-import type { Contract } from "../core/types.js";
+import type { Contract, VerificationSummary, VerifyCommandResult } from "../core/types.js";
 import { writeEvidence } from "./evidence.js";
 
 const execAsync = promisify(exec);
-
-export interface VerifyCommandResult {
-  command: string;
-  success: boolean;
-  exitCode: number;
-  output: string;
-}
-
-export interface VerificationSummary {
-  success: boolean;
-  results: VerifyCommandResult[];
-  evidencePath?: string;
-}
 
 export async function runVerificationCommands(
   contractId: string,

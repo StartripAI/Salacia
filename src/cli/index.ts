@@ -35,9 +35,11 @@ import { applyDisambiguationAnswer } from "../prompt/disambiguate.js";
 import { runMetamorphicTests } from "../prompt/metamorphic.js";
 import { optimizePrompts } from "../prompt/optimize.js";
 import { buildSalaciaMcpServerDescription, runSalaciaMcpServer } from "../protocols/mcp-server.js";
+import { compileProgramMarkdown, defaultProgramPath, loadBlueprint, saveBlueprint } from "../runtime/program.js";
+import { resolveTrace, runBlueprint } from "../runtime/run.js";
 
 const program = new Command();
-program.name("salacia").description("salacia v0.1.2 - repo-first Agentic Engineering OS").version("0.1.2");
+program.name("salacia").description("salacia v0.2.0 - AI coding agent harness/runtime").version("0.2.0");
 
 function emit(data: unknown, asJson: boolean): void {
   if (asJson) {
@@ -233,6 +235,192 @@ async function runPlanCommand(vibe: string, opts: { explain: boolean; json: bool
   );
 }
 
+async function runDesignCommand(opts: { json: boolean }): Promise<void> {
+  const cwd = process.cwd();
+  const programPath = defaultProgramPath(cwd);
+  const blueprint = await compileProgramMarkdown(programPath);
+  const blueprintPath = await saveBlueprint(cwd, blueprint);
+  emit(
+    {
+      ok: true,
+      programPath,
+      blueprintPath,
+      blueprint
+    },
+    opts.json || true
+  );
+}
+
+async function runJudgeCommand(opts: { run?: string; json: boolean }): Promise<void> {
+  const trace = await resolveTrace(process.cwd(), opts.run);
+  emit(
+    {
+      ok: true,
+      runId: trace.runId,
+      judge: trace.judge,
+      summary: trace.summary
+    },
+    opts.json || true
+  );
+}
+
+async function runTraceCommand(opts: { run?: string; json: boolean }): Promise<void> {
+  const trace = await resolveTrace(process.cwd(), opts.run);
+  emit(
+    {
+      ok: true,
+      runId: trace.runId,
+      summary: trace.summary,
+      judge: trace.judge,
+      events: trace.events
+    },
+    opts.json || true
+  );
+}
+
+async function runEvalAction(
+  action: string,
+  opts: {
+    run?: string;
+    suite: BenchmarkSuite;
+    repeats: string;
+    sample?: string;
+    concurrency?: string;
+    resume?: boolean;
+    strict?: boolean;
+    scaffold?: boolean;
+    publicModelChain?: string;
+    publicStrictMinModelAttemptedRate?: string;
+    profile?: string;
+    json: boolean;
+  }
+): Promise<void> {
+  const cwd = process.cwd();
+  const loadReport = async () => {
+    if (opts.run) {
+      return loadBenchmarkReportByRunId(cwd, opts.run);
+    }
+    return loadLatestBenchmarkReport(cwd);
+  };
+
+  if (action === "superiority") {
+    const report = await runSuperiorityAudit({
+      cwd,
+      ...(opts.profile ? { profilePath: opts.profile } : {})
+    });
+    emit({ ok: report.strongerThanBaseline, kind: "superiority", report }, opts.json || true);
+    if (!report.strongerThanBaseline) process.exit(1);
+    return;
+  }
+
+  if (action === "run") {
+    const suite = opts.suite;
+    if (!["core", "scale", "full"].includes(suite)) {
+      emit({ ok: false, error: "Invalid suite. Use core|scale|full." }, true);
+      process.exit(1);
+    }
+    const report = await runBenchmark({
+      cwd,
+      suite,
+      repeats: parseIntOption(opts.repeats, 1)
+    });
+    emit(
+      {
+        ok: true,
+        kind: "benchmark-run",
+        runId: report.metadata.runId,
+        reportPath: report.reportPath,
+        probeCount: report.probeCount
+      },
+      opts.json || true
+    );
+    return;
+  }
+
+  if (action === "compare") {
+    const report = await loadReport();
+    if (!report) {
+      emit({ ok: false, error: "No benchmark report found. Run `salacia eval run` first." }, true);
+      process.exit(1);
+    }
+    const comparisons = await compareBenchmarkRun(report, { cwd });
+    emit({ ok: true, kind: "benchmark-compare", runId: report.metadata.runId, comparisons }, opts.json || true);
+    return;
+  }
+
+  if (action === "verify") {
+    if (!opts.run) {
+      emit({ ok: false, error: "eval verify requires --run <runId>" }, true);
+      process.exit(1);
+    }
+    const runDir = path.join(cwd, ".salacia", "journal", "bench", "runs", opts.run);
+    const verification = await verifyRunAttestation(runDir, {
+      keyDir: path.join(cwd, ".salacia", "journal", "bench", "keys")
+    });
+    emit({ ok: verification.ok, kind: "benchmark-verify", verification }, opts.json || true);
+    if (!verification.ok) process.exit(1);
+    return;
+  }
+
+  if (action === "report") {
+    const report = await loadReport();
+    if (!report) {
+      emit({ ok: false, error: "No benchmark report found. Run `salacia eval run` first." }, true);
+      process.exit(1);
+    }
+    emit({ ok: true, kind: "benchmark-report", report }, opts.json || true);
+    return;
+  }
+
+  if (action === "sota-check") {
+    const report = await loadReport();
+    if (!report) {
+      emit({ ok: false, error: "No benchmark report found. Run `salacia eval run` first." }, true);
+      process.exit(1);
+    }
+    const comparisons = await compareBenchmarkRun(report, { cwd });
+    const decision = decideSota(report, comparisons, { requireMeasured: Boolean(opts.strict) });
+    emit({ ok: decision.passed, kind: "benchmark-sota-check", decision }, opts.json || true);
+    if (!decision.passed) process.exit(1);
+    return;
+  }
+
+  if (action === "measure") {
+    const report = await runCompetitorBenchmark({ cwd });
+    emit(
+      {
+        ok: true,
+        kind: "benchmark-measure",
+        runId: report.runId,
+        reportPath: report.reportPath,
+        results: report.results.length
+      },
+      opts.json || true
+    );
+    return;
+  }
+
+  if (action === "public-run" || action === "public-audit" || action === "public-campaign") {
+    emit(
+      {
+        ok: false,
+        error: `${action} is not wired in CLI yet. Use scripts/public-benchmark-*.mjs directly.`
+      },
+      true
+    );
+    process.exit(1);
+  }
+
+  emit(
+    {
+      ok: false,
+      error: "Unknown eval action. Use run|compare|verify|report|sota-check|measure|public-run|public-audit|public-campaign|superiority."
+    },
+    true
+  );
+  process.exit(1);
+}
+
 program
   .command("init")
   .description("Initialize .salacia runtime in current repository")
@@ -240,6 +428,14 @@ program
   .action(async (opts: { json: boolean }) => {
     const result = await initRepository(process.cwd());
     emit({ initialized: true, created: result.created }, opts.json);
+  });
+
+program
+  .command("design")
+  .description("Compile program.md into a runtime blueprint")
+  .option("--json", "json output", false)
+  .action(async (opts: { json: boolean }) => {
+    await runDesignCommand(opts);
   });
 
 program
@@ -587,6 +783,68 @@ program
   );
 
 program
+  .command("run")
+  .description("Run blueprint-backed harness flow with context, judge, and promotion")
+  .option("--adapter <name>", "adapter name")
+  .option("--dry-run", "do not run mutating tools", false)
+  .option("--mode <mode>", "adapter mode (auto|cli)", "auto")
+  .option("--json", "json output", false)
+  .action(async (opts: { adapter?: string; dryRun: boolean; mode: string; json: boolean }) => {
+    const cwd = process.cwd();
+    const blueprint = await loadBlueprint(cwd);
+    if (!blueprint) {
+      emit({ ok: false, error: "Missing blueprint. Run salacia design first." }, true);
+      process.exit(1);
+    }
+
+    let mode: "auto" | "cli";
+    try {
+      mode = parseExecuteMode(opts.mode);
+    } catch (error) {
+      emit({ ok: false, error: (error as Error).message }, true);
+      process.exit(1);
+      return;
+    }
+
+    const result = await runBlueprint({
+      root: cwd,
+      blueprint,
+      dryRun: opts.dryRun,
+      mode,
+      ...(opts.adapter ? { adapterName: opts.adapter } : {})
+    });
+
+    emit(
+      {
+        ok: result.judge.promotionDecision === "accept",
+        runId: result.runId,
+        summary: result.summary,
+        judge: result.judge
+      },
+      opts.json || true
+    );
+    if (result.judge.promotionDecision !== "accept") process.exit(1);
+  });
+
+program
+  .command("judge")
+  .description("Inspect the judge report for a run")
+  .option("--run <runId>", "run id")
+  .option("--json", "json output", false)
+  .action(async (opts: { run?: string; json: boolean }) => {
+    await runJudgeCommand(opts);
+  });
+
+program
+  .command("trace")
+  .description("Inspect run events, summary, and judge output")
+  .option("--run <runId>", "run id")
+  .option("--json", "json output", false)
+  .action(async (opts: { run?: string; json: boolean }) => {
+    await runTraceCommand(opts);
+  });
+
+program
   .command("snapshot")
   .description("Create a reversible snapshot")
   .option("--label <label>", "snapshot label", "manual")
@@ -626,21 +884,26 @@ program
   .option("--json", "json output", false)
   .action(async (opts: { json: boolean }) => {
     const paths = await ensureSalaciaDirs(process.cwd());
-    const [contracts, specs, plans, snapshots] = await Promise.all([
+    const [contracts, specs, plans, snapshots, runs, context] = await Promise.all([
       fs.readdir(paths.contracts).catch(() => []),
       fs.readdir(paths.specs).catch(() => []),
       fs.readdir(paths.plans).catch(() => []),
-      fs.readdir(paths.snapshots).catch(() => [])
+      fs.readdir(paths.snapshots).catch(() => []),
+      fs.readdir(paths.runs).catch(() => []),
+      fs.readdir(paths.context).catch(() => [])
     ]);
 
     emit(
       {
         ok: true,
         counts: {
+          blueprint: (await fs.access(paths.blueprint).then(() => 1).catch(() => 0)),
           contracts: contracts.length,
           specs: specs.length,
           plans: plans.length,
-          snapshots: snapshots.length
+          snapshots: snapshots.length,
+          runs: runs.length,
+          contexts: context.length
         }
       },
       opts.json || true
@@ -712,23 +975,56 @@ program
   });
 
 program
+  .command("eval")
+  .description("Unified eval surface for benchmarks and superiority profiles")
+  .argument("<action>", "run|compare|verify|report|sota-check|measure|public-run|public-audit|public-campaign|superiority")
+  .option("--run <runId>", "benchmark run id")
+  .option("--suite <suite>", "core|scale|full", "full")
+  .option("--repeats <n>", "repeats per probe", "1")
+  .option("--sample <n>", "sample size")
+  .option("--concurrency <n>", "parallel workers")
+  .option("--resume", "resume previous campaign", false)
+  .option("--strict", "enable strict policy checks", false)
+  .option("--no-scaffold", "skip benchmark scaffold generation", false)
+  .option("--public-model-chain <chain>", "public model chain")
+  .option("--public-strict-min-model-attempted-rate <rate>", "strict minimum model-attempted rate", "0.5")
+  .option("--profile <path>", "audit profile path")
+  .option("--json", "json output", false)
+  .action(
+    async (
+      action: string,
+      opts: {
+        run?: string;
+        suite: BenchmarkSuite;
+        repeats: string;
+        sample?: string;
+        concurrency?: string;
+        resume: boolean;
+        strict: boolean;
+        scaffold: boolean;
+        publicModelChain?: string;
+        publicStrictMinModelAttemptedRate: string;
+        profile?: string;
+        json: boolean;
+      }
+    ) => {
+      await runEvalAction(action, opts);
+    }
+  );
+
+program
   .command("audit")
   .description("Run audit suites for capability and evidence quality")
   .argument("<action>", "superiority")
   .option("--profile <path>", "audit profile path")
   .option("--json", "json output", false)
   .action(async (action: string, opts: { profile?: string; json: boolean }) => {
-    if (action !== "superiority") {
-      emit({ ok: false, error: "Unknown audit action. Use superiority." }, true);
-      process.exit(1);
-    }
-
-    const report = await runSuperiorityAudit({
-      cwd: process.cwd(),
-      ...(opts.profile ? { profilePath: opts.profile } : {})
+    await runEvalAction(action, {
+      suite: "full",
+      repeats: "1",
+      json: opts.json,
+      ...(opts.profile ? { profile: opts.profile } : {})
     });
-    emit({ ok: report.strongerThanBaseline, report }, opts.json || true);
-    if (!report.strongerThanBaseline) process.exit(1);
   });
 
 program
@@ -763,120 +1059,7 @@ program
         json: boolean;
       }
     ) => {
-      const cwd = process.cwd();
-      const loadReport = async () => {
-        if (opts.run) {
-          return loadBenchmarkReportByRunId(cwd, opts.run);
-        }
-        return loadLatestBenchmarkReport(cwd);
-      };
-
-      if (action === "run") {
-        const suite = opts.suite;
-        if (!["core", "scale", "full"].includes(suite)) {
-          emit({ ok: false, error: "Invalid suite. Use core|scale|full." }, true);
-          process.exit(1);
-        }
-        const report = await runBenchmark({
-          cwd,
-          suite,
-          repeats: parseIntOption(opts.repeats, 1)
-        });
-        emit(
-          {
-            ok: true,
-            runId: report.metadata.runId,
-            reportPath: report.reportPath,
-            probeCount: report.probeCount
-          },
-          opts.json || true
-        );
-        return;
-      }
-
-      if (action === "compare") {
-        const report = await loadReport();
-        if (!report) {
-          emit({ ok: false, error: "No benchmark report found. Run `salacia benchmark run` first." }, true);
-          process.exit(1);
-        }
-        const comparisons = await compareBenchmarkRun(report, { cwd });
-        emit({ ok: true, runId: report.metadata.runId, comparisons }, opts.json || true);
-        return;
-      }
-
-      if (action === "verify") {
-        if (!opts.run) {
-          emit({ ok: false, error: "benchmark verify requires --run <runId>" }, true);
-          process.exit(1);
-        }
-        const runDir = path.join(cwd, ".salacia", "journal", "bench", "runs", opts.run);
-        const verification = await verifyRunAttestation(runDir, {
-          keyDir: path.join(cwd, ".salacia", "journal", "bench", "keys")
-        });
-        emit({ ok: verification.ok, verification }, opts.json || true);
-        if (!verification.ok) process.exit(1);
-        return;
-      }
-
-      if (action === "report") {
-        const report = await loadReport();
-        if (!report) {
-          emit({ ok: false, error: "No benchmark report found. Run `salacia benchmark run` first." }, true);
-          process.exit(1);
-        }
-        emit({ ok: true, report }, opts.json || true);
-        return;
-      }
-
-      if (action === "sota-check") {
-        const report = await loadReport();
-        if (!report) {
-          emit({ ok: false, error: "No benchmark report found. Run `salacia benchmark run` first." }, true);
-          process.exit(1);
-        }
-        const comparisons = await compareBenchmarkRun(report, { cwd });
-        const decision = decideSota(report, comparisons, { requireMeasured: opts.strict });
-        emit({ ok: decision.passed, decision }, opts.json || true);
-        if (!decision.passed) process.exit(1);
-        return;
-      }
-
-      if (action === "measure") {
-        const report = await runCompetitorBenchmark({
-          cwd
-        });
-        emit(
-          {
-            ok: true,
-            runId: report.runId,
-            reportPath: report.reportPath,
-            results: report.results.length
-          },
-          opts.json || true
-        );
-        return;
-      }
-
-      if (action === "public-run" || action === "public-audit" || action === "public-campaign") {
-        emit(
-          {
-            ok: false,
-            error: `${action} is not wired in CLI yet. Use scripts/public-benchmark-*.mjs directly.`
-          },
-          true
-        );
-        process.exit(1);
-      }
-
-      emit(
-        {
-          ok: false,
-          error: "Unknown benchmark action. Use run|compare|verify|report|sota-check|measure|public-run|public-audit|public-campaign."
-        },
-        true
-      );
-      process.exit(1);
+      await runEvalAction(action, opts);
     }
   );
 

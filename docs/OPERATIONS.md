@@ -1,82 +1,100 @@
 # Operations
 
-## Local Quality Gates
+## v0.2 Primary Flow
+
+Initialize a repository:
 
 ```bash
-npm run lint
-npm test
-npm run build
-npm run smoke
+salacia init
 ```
 
-## Prompt Pipeline Gates
-
-Compile intent IR and inspect diagnostics:
+Compile `program.md` into a blueprint:
 
 ```bash
-salacia prompt compile "build a todo app safely" --json
+salacia design --json
 ```
 
-Run metamorphic prompt checks:
+Run the harness:
 
 ```bash
-salacia prompt test --input .salacia/plans/intent-ir-<id>.json --json
+salacia run --adapter codex --json
 ```
 
-Optimize prompt patches from evidence:
+Inspect the decision:
 
 ```bash
-salacia prompt optimize --from-journal --json
+salacia judge --json
+salacia trace --json
 ```
+
+## Eval Surface
+
+Run benchmark probes:
+
+```bash
+salacia eval run --suite full --json
+```
+
+Compare against competitors:
+
+```bash
+salacia eval compare --run <run-id> --json
+```
+
+Verify benchmark attestation:
+
+```bash
+salacia eval verify --run <run-id> --json
+```
+
+Run superiority profile:
+
+```bash
+salacia eval superiority --profile docs/benchmarks/trellis-baseline.v1.json --json
+```
+
+## Judge and Promotion
+
+Judge output is always written to:
+
+```text
+.salacia/runs/<run-id>/judge.json
+```
+
+Possible outcomes:
+
+- `accept`
+- `reject`
+- `blocked`
+
+Promotion policy:
+
+- accepted patches may be promoted to the root workspace
+- rejected patches are discarded
+- blocked runs preserve trace/evidence but do not promote changes
 
 ## Release Gate
 
-```bash
-node scripts/release-gate.mjs --plan <plan.json> --exec <exec.json> --require-convergence
+Release policy should consume:
+
+- runtime judge reports
+- eval/superiority reports
+- standard verification commands
+
+This replaces the old v0.1 mental model of “convergence-only release gating.”
+
+## Legacy v0.1 Surface
+
+The following commands are legacy/transitional:
+
+- `plan`
+- `forge`
+- `prompt`
+- `execute`
+- `validate`
+
+They remain useful for compatibility and historical tests, but the primary runtime flow is now:
+
+```text
+init -> design -> run -> judge -> trace -> eval
 ```
-
-Local-only mode without external advisors:
-
-```bash
-node scripts/release-gate.mjs --plan <plan.json> --exec <exec.json> --require-convergence --no-external
-```
-
-GitHub Actions policy:
-
-- CI/Release workflows run real advisor CLIs (`claude`, `gemini`, `chatgpt/codex`) for convergence checks.
-- Credentials are customer-managed GitHub secrets (`ANTHROPIC_AUTH_TOKEN`, `GEMINI_API_KEY`/`GOOGLE_API_KEY`, `OPENAI_API_KEY`).
-- If no provider is ready, workflow fails instead of silently downgrading to mock advisors.
-
-Consistency safety net check:
-
-```bash
-salacia guard consistency --json
-```
-
-Superiority audit (trust-through-evidence):
-
-```bash
-salacia audit superiority --profile docs/benchmarks/trellis-baseline.v1.json --json
-```
-
-Audit evidence is persisted to `.salacia/journal/superiority-audit-*.json`.
-
-## Snapshot and Rollback
-
-Create snapshot:
-
-```bash
-salacia snapshot --label before-change --json
-```
-
-Rollback:
-
-```bash
-salacia rollback <snapshot-id> --json
-```
-
-## Platform Notes
-
-- Windows Codex route uses WSL.
-- Prefer Node-based scripts for cross-platform behavior.
-- Keep path handling via `path.join/path.resolve` for encoding-safe output paths.

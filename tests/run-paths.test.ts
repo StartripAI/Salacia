@@ -10,7 +10,11 @@ describe("run paths", () => {
     const runId = createRunId();
     const run = await ensureRunDirs(root, runId);
     const stat = await fs.stat(run.dir);
+    const contextSuffix = path.join(".salacia", "context", `${runId}.json`);
     expect(stat.isDirectory()).toBe(true);
+    expect(run.context.endsWith(contextSuffix)).toBe(true);
+    expect(run.summary.endsWith("summary.json")).toBe(true);
+    expect(run.judge.endsWith("judge.json")).toBe(true);
     expect(run.intentIr.endsWith("intent.ir.json")).toBe(true);
     expect(run.verifyReport.endsWith(path.join("verify", "report.json"))).toBe(true);
   });

@@ -65,6 +65,51 @@ interop:
 
 const DEFAULT_SPEC = `# Salacia Spec\n\n## Goal\nDescribe the desired outcome.\n\n## Scope\n- In Scope:\n- Out of Scope:\n\n## Acceptance Criteria\n- [ ] Functional behavior verified\n- [ ] Regression checks pass\n- [ ] Rollback path documented\n\n## Verification\n- npm run lint\n- npm test\n`;
 
+const DEFAULT_PROGRAM = `# Salacia Program
+
+## Goal
+- Improve this repository through bounded, auditable AI coding runs.
+
+## Constraints
+- Keep changes reviewable and reversible.
+- Prefer small diffs with explicit verification.
+
+## Mutable Surface
+- src/**
+- tests/**
+- docs/**
+- README.md
+- .vscode/**
+
+## Protected Surface
+- .salacia/**
+- node_modules/**
+- dist/**
+- third_party/**
+- .env*
+- secrets/**
+
+## Success Metrics
+- Required commands pass.
+- Diffs stay inside the mutable surface.
+- The resulting patch is small enough to review.
+
+## Budget
+- maxFiles: 8
+- maxSymbols: 20
+- maxSnippetChars: 12000
+- maxHistoryEntries: 5
+
+## Verification
+- npm run lint
+- npm test
+
+## Promotion Policy
+- Accept only when verification passes and guardrails are satisfied.
+- Reject when verification fails.
+- Block when writes escape the mutable surface or touch protected paths.
+`;
+
 export interface InitResult {
   paths: SalaciaPaths;
   created: string[];
@@ -86,9 +131,10 @@ export async function initRepository(root = process.cwd()): Promise<InitResult> 
   const created: string[] = [];
 
   const files: Array<[string, string]> = [
+    [path.join(root, "program.md"), DEFAULT_PROGRAM],
     [path.join(paths.contracts, "default.yaml"), DEFAULT_CONTRACT],
     [path.join(paths.specs, "default.md"), DEFAULT_SPEC],
-    [path.join(paths.salacia, "workflow.md"), "# Salacia Workflow\n\nPlan -> Converge -> Execute -> Verify -> Converge\n"]
+    [path.join(paths.salacia, "workflow.md"), "# Salacia Workflow\n\nDesign -> Build Context -> Run -> Judge -> Promote/Reject\n"]
   ];
 
   for (const [filePath, content] of files) {

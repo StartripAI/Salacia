@@ -28,6 +28,34 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Detect advisor mode
+        id: advisor-mode
+        env:
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          node -e "const fs=require('node:fs'); const has=Object.values({ANTHROPIC_AUTH_TOKEN:process.env.ANTHROPIC_AUTH_TOKEN,GEMINI_API_KEY:process.env.GEMINI_API_KEY,GOOGLE_API_KEY:process.env.GOOGLE_API_KEY,OPENAI_API_KEY:process.env.OPENAI_API_KEY}).some((value)=>Boolean((value||'').trim())); fs.appendFileSync(process.env.GITHUB_OUTPUT, `enabled=${has}\nmode=${has?'real':'mock'}\n`);"
+
+      - name: Report advisor mode
+        run: |
+          echo "Advisor mode: ${{ steps.advisor-mode.outputs.mode }}"
+
+      - name: Install real LLM CLIs
+        if: steps.advisor-mode.outputs.enabled == 'true'
+        run: npm i -g @anthropic-ai/claude-code @google/gemini-cli @openai/codex
+
+      - name: Validate real LLM prerequisites
+        if: steps.advisor-mode.outputs.enabled == 'true'
+        env:
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          node -e "const {execSync}=require('node:child_process'); const hasCmd=(cmd)=>{try{execSync(cmd+' --help',{stdio:'pipe'}); return true;}catch{return false;}}; const hasClaude=hasCmd('claude') && Boolean((process.env.ANTHROPIC_AUTH_TOKEN||'').trim()); const hasGemini=hasCmd('gemini') && Boolean((process.env.GEMINI_API_KEY||process.env.GOOGLE_API_KEY||'').trim()); const hasOpenAI=(hasCmd('chatgpt')||hasCmd('codex')) && Boolean((process.env.OPENAI_API_KEY||'').trim()); if(!(hasClaude||hasGemini||hasOpenAI)){throw new Error('No ready LLM provider. Need at least one: claude+ANTHROPIC_AUTH_TOKEN | gemini+GEMINI_API_KEY | (chatgpt|codex)+OPENAI_API_KEY');}"
+
       - name: Prepare gate fixtures
         shell: bash
         run: |
@@ -57,7 +85,40 @@ jobs:
           }
           JSON
 
-      - name: Prepare advisors (mock-only)
+      - name: Real E2E fullflow
+        if: steps.advisor-mode.outputs.enabled == 'true'
+        env:
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: npm run test:e2e:fullflow:real
+
+      - name: Real E2E failures
+        if: steps.advisor-mode.outputs.enabled == 'true'
+        env:
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: npm run test:e2e:failures:real
+
+      - name: Run release gate (real advisors)
+        if: steps.advisor-mode.outputs.enabled == 'true'
+        shell: bash
+        env:
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          node scripts/release-gate.mjs \
+            --plan .salacia/plans/release-gate-plan.json \
+            --exec .salacia/journal/release-gate-exec.json \
+            --require-convergence
+
+      - name: Prepare advisors (mock fallback)
+        if: steps.advisor-mode.outputs.enabled != 'true'
         shell: bash
         run: |
           printf '%s\n' \
@@ -70,9 +131,15 @@ jobs:
             'console.log(JSON.stringify({ vote: "approve", summary: "mock gemini approve", evidenceRef: "mock-gemini" }));' \
             > scripts/validate-gemini.mjs
 
-          chmod +x scripts/validate-claude.mjs scripts/validate-gemini.mjs
+          printf '%s\n' \
+            '#!/usr/bin/env node' \
+            'console.log(JSON.stringify({ vote: "approve", summary: "mock chatgpt approve", evidenceRef: "mock-chatgpt" }));' \
+            > scripts/validate-chatgpt.mjs
 
-      - name: Run release gate (mock advisors, no external API keys)
+          chmod +x scripts/validate-claude.mjs scripts/validate-gemini.mjs scripts/validate-chatgpt.mjs
+
+      - name: Run release gate (mock advisors)
+        if: steps.advisor-mode.outputs.enabled != 'true'
         shell: bash
         run: |
           node scripts/release-gate.mjs \
